@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://components/enemy.gd" id="1_en"]
+[ext_resource type="Texture2D" path="res://art/meteor.svg" id="2_tex"]
+
+[sub_resource type="CircleShape2D" id="Circ_met"]
+radius = 32.0
+
+[node name="Meteor" type="Area2D" groups=["enemy"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_en")
+health = 6
+speed = 250.0
+score_value = 2
+kind = "meteor"
+contact_damage = 2
+spin_speed = 1.5
+explosion_radius = 66.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Circ_met")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]

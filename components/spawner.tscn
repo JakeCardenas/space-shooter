@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://components/spawner.gd" id="1_sp"]
+
+[node name="Spawner" type="Node2D"]
+script = ExtResource("1_sp")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 1.05
+autostart = true
+
+[node name="lPoint" type="Marker2D" parent="."]
+position = Vector2(70, -100)
+
+[node name="rPoint" type="Marker2D" parent="."]
+position = Vector2(650, -100)
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

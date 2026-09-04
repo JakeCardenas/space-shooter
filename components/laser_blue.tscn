@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://components/laser.gd" id="1_ls"]
+[ext_resource type="Texture2D" path="res://art/laser_blue.svg" id="2_tex"]
+
+[sub_resource type="CapsuleShape2D" id="Caps_blue"]
+radius = 5.0
+height = 34.0
+
+[node name="LaserBlue" type="Area2D" groups=["laser"]]
+z_index = 2
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_ls")
+speed = 1050.0
+damage = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Caps_blue")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 2.5
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

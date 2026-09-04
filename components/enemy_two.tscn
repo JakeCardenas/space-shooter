@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://components/enemy.gd" id="1_en"]
+[ext_resource type="Texture2D" path="res://art/enemy_two.svg" id="2_tex"]
+
+[sub_resource type="CircleShape2D" id="Circ_e2"]
+radius = 34.0
+
+[node name="EnemyTwo" type="Area2D" groups=["enemy"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_en")
+health = 3
+speed = 135.0
+score_value = 3
+kind = "ship"
+contact_damage = 1
+weave_amplitude = 95.0
+weave_speed = 1.7
+explosion_radius = 72.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Circ_e2")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]

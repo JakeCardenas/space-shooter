@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://components/enemy.gd" id="1_en"]
+[ext_resource type="Texture2D" path="res://art/powerup.svg" id="2_tex"]
+
+[sub_resource type="CircleShape2D" id="Circ_pu"]
+radius = 27.0
+
+[node name="PowerUp" type="Area2D" groups=["powerUp"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_en")
+health = 1
+speed = 175.0
+score_value = 0
+kind = "powerup"
+contact_damage = 0
+weave_amplitude = 55.0
+weave_speed = 2.4
+spin_speed = 2.2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Circ_pu")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
