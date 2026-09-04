@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://components/boss.gd" id="1_boss"]
+[ext_resource type="Texture2D" path="res://art/boss.svg" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="Rect_boss"]
+size = Vector2(200, 112)
+
+[node name="Boss" type="Area2D" groups=["enemy"]]
+z_index = 1
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_boss")
+max_health = 40
+score_value = 400
+contact_damage = 2
+dies_on_contact = false
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Rect_boss")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]

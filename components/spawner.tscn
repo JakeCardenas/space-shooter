@@ -5,8 +5,11 @@
 [node name="Spawner" type="Node2D"]
 script = ExtResource("1_sp")
 
-[node name="Timer" type="Timer" parent="."]
-wait_time = 1.05
+[node name="DiveTimer" type="Timer" parent="."]
+wait_time = 3.0
+
+[node name="MeteorTimer" type="Timer" parent="."]
+wait_time = 5.0
 autostart = true
 
 [node name="lPoint" type="Marker2D" parent="."]
@@ -15,4 +18,5 @@ position = Vector2(70, -100)
 [node name="rPoint" type="Marker2D" parent="."]
 position = Vector2(650, -100)
 
-[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="timeout" from="DiveTimer" to="." method="_on_dive_timer_timeout"]
+[connection signal="timeout" from="MeteorTimer" to="." method="_on_meteor_timer_timeout"]

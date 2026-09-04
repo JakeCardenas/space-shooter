@@ -11,11 +11,16 @@ collision_layer = 1
 collision_mask = 1
 script = ExtResource("1_en")
 health = 1
-speed = 210.0
-score_value = 1
+speed = 180.0
+score_value = 10
 kind = "ship"
 contact_damage = 1
 explosion_radius = 55.0
+formation_member = true
+entry_speed = 560.0
+dive_speed = 420.0
+dive_pattern = "curved"
+return_chance = 0.5
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")

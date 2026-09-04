@@ -24,7 +24,7 @@ var _last_x := 0.0
 func _ready() -> void:
 	health = max_health
 	_last_x = global_position.x
-	visible = false   # stays hidden until a ship is picked and the run starts
+	visible = false
 	show_chosen_ship()
 
 
@@ -32,6 +32,13 @@ func show_chosen_ship() -> void:
 	$ships/ship1.visible = Global.chosen_ship == 1
 	$ships/ship2.visible = Global.chosen_ship == 2
 	$ships/ship3.visible = Global.chosen_ship == 3
+	match Global.chosen_ship:
+		1:
+			$Trail.color = Color(0.45, 0.78, 1.0, 0.55)
+		2:
+			$Trail.color = Color(0.45, 1.0, 0.62, 0.55)
+		_:
+			$Trail.color = Color(0.78, 0.5, 1.0, 0.55)
 
 
 func _process(delta: float) -> void:
@@ -52,12 +59,10 @@ func _move(delta: float) -> void:
 			var step: float = min(speed * delta, to_target.length())
 			global_position += to_target.normalized() * step
 
-	# Keep the ship on screen.
 	var screen := get_viewport_rect().size
 	global_position.x = clampf(global_position.x, 46.0, screen.x - 46.0)
 	global_position.y = clampf(global_position.y, 90.0, screen.y - 70.0)
 
-	# Bank into the turn a little — pure polish.
 	var drift := global_position.x - _last_x
 	_last_x = global_position.x
 	var target_tilt := clampf(drift * 0.03, -0.32, 0.32)
@@ -71,16 +76,16 @@ func shoot_laser() -> void:
 		1:  # ACE — fast single shot
 			fire_rate = 0.24
 			_spawn_laser(_laser_blue, Vector2.UP)
-			Sfx.play("laser", -3.0, randf_range(0.97, 1.06))
+			Sfx.play_varied("laser", -4.0, 0.07)
 		2:  # TANK — slower triple spread
 			fire_rate = 0.5
 			for angle in [-0.2, 0.0, 0.2]:
 				_spawn_laser(_laser_green, Vector2.UP.rotated(angle))
-			Sfx.play("laser", -3.0, 0.8)
+			Sfx.play_varied("laser_spread", -4.0, 0.06)
 		3:  # ZAP — slow piercing orb
 			fire_rate = 0.8
 			_spawn_laser(_laser_orb, Vector2.UP)
-			Sfx.play("laser_heavy", -3.0)
+			Sfx.play_varied("laser_heavy", -4.0, 0.05)
 
 	can_shoot = false
 	$TimerToShoot.wait_time = maxf(0.08, fire_rate - power_up_boost)
@@ -98,11 +103,13 @@ func take_damage(amount: int) -> void:
 	if destroyed or _invincible:
 		return
 	health -= amount
+	Global.damaged_this_wave = true
 	if health <= 0:
 		health = 0
 		die()
 	else:
-		Sfx.play("hit")
+		Sfx.play_varied("hit", -1.0, 0.1)
+		Global.shake(9.0)
 		_start_invincibility()
 
 
@@ -110,13 +117,16 @@ func die() -> void:
 	destroyed = true
 	Global.game_over = true
 	$ships.visible = false
+	$Trail.visible = false
 	$CollisionShape2D.set_deferred("disabled", true)
-	Sfx.play("explosion")
+	Sfx.play("explosion_big", -1.0)
 	Sfx.play("game_over", -3.0)
+	Global.shake(20.0)
 
 	var boom = _explosion.instantiate()
 	boom.radius = 130.0
 	boom.duration = 0.8
+	boom.shards = 14
 	boom.color = Color(1.0, 0.45, 0.25)
 	get_parent().add_child(boom)
 	boom.global_position = global_position
@@ -141,11 +151,20 @@ func _on_area_entered(area: Area2D) -> void:
 		power_up_boost = 0.14
 		Sfx.play("powerup", -2.0)
 		$TimerPowerUp.start()
+		var tween := create_tween()
+		$ships.modulate = Color(2.0, 1.9, 1.2)
+		tween.tween_property($ships, "modulate", Color.WHITE, 0.3)
+		return
+
+	if area.is_in_group("enemyLaser"):
+		area.on_hit()
+		take_damage(area.damage)
 		return
 
 	if area.is_in_group("enemy"):
 		var damage: int = area.contact_damage
-		area.explode(false)
+		if area.dies_on_contact:
+			area.explode(false)
 		take_damage(damage)
 
 
