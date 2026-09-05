@@ -16,6 +16,8 @@ fi
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
+# keep Godot from importing the export output back into the project
+: > "$OUT/.gdignore"
 
 # --import first so a clean checkout has its .godot cache before exporting
 "$GODOT" --headless --path "$HERE" --import

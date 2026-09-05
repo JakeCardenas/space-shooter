@@ -4,19 +4,14 @@ extends Node
 # named tracks. Looping is done by hand (replay on `finished`) so any format
 # works without per-format loop-flag handling.
 #
-# No tracks ship with the project yet — play() checks the file exists before
-# loading, so calling it with nothing in music/ is a silent no-op. Drop an
-# .ogg or .wav at the paths below and it starts working immediately.
+# Drop a file at music/<name>.ogg (or .mp3 / .wav) and it is picked up
+# automatically. Asking for a track with no file present leaves whatever is
+# already playing alone, so a partial soundtrack still plays continuously
+# instead of cutting to silence.
 
-const TRACKS := {
-	"menu": "res://music/menu.ogg",
-	"gameplay": "res://music/gameplay.ogg",
-	"challenge": "res://music/challenge.ogg",
-	"boss": "res://music/boss.ogg",
-	"game_over": "res://music/game_over.ogg",
-	"high_score": "res://music/high_score.ogg",
-}
-const VOLUME_DB := -6.0
+const TRACKS := ["menu", "gameplay", "challenge", "boss", "game_over", "high_score"]
+const EXTENSIONS := [".ogg", ".mp3", ".wav"]
+const VOLUME_DB := -8.0
 const FADE_TIME := 0.6
 
 var _player: AudioStreamPlayer
@@ -32,16 +27,23 @@ func _ready() -> void:
 	_player.finished.connect(_on_finished)
 
 
+func track_path(track: String) -> String:
+	for ext in EXTENSIONS:
+		var path := "res://music/%s%s" % [track, ext]
+		if ResourceLoader.exists(path):
+			return path
+	return ""
+
+
 func play(track: String) -> void:
 	if track == _current:
 		return
+	var path := track_path(track)
+	if path == "":
+		return  # nothing supplied for this track — keep the current one going
 	_current = track
 
-	if not TRACKS.has(track) or not ResourceLoader.exists(TRACKS[track]):
-		stop()
-		return
-
-	var stream := load(TRACKS[track])
+	var stream := load(path)
 	if is_instance_valid(_fade_tween):
 		_fade_tween.kill()
 
