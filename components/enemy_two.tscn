@@ -24,6 +24,7 @@ dive_pattern = "straight"
 return_chance = 0.35
 shoots = true
 shoot_interval = 2.6
+sniper = true
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")

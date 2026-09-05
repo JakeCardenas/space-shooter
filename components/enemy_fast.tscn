@@ -20,7 +20,7 @@ formation_member = true
 entry_speed = 1225.0
 dive_speed = 640.0
 dive_pattern = "fast"
-return_chance = 0.25
+return_chance = 0.15
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")

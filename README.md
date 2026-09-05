@@ -194,12 +194,42 @@ Every **5th stage is an elite/boss stage**.
 Meteors fall in as an ambient hazard during waves and cost 2 health. Boss waves
 skip meteors and drop power-ups instead so the fight stays readable.
 
+## Coordinated attacks
+
+Beyond single divers, `spawner.gd` picks from a pool of attack plans that
+widens with the wave (`_pick_plan()`):
+
+| Plan | From wave | What happens |
+|---|---|---|
+| Solo | 1 | One enemy dives, as before |
+| Pair | 3 | Two neighbours converge on the player from either side |
+| Squad | 5 | Three neighbours dive in quick succession |
+| Feint | 5 | A bluff dive that pulls up early, then a real one follows |
+| Pincer | 7 | The outermost enemy on each flank closes in together |
+| Cross | 7 | Two divers use the `sweep` pattern and cross sides |
+| Escort | 9 | A tough enemy dives with light enemies flanking it |
+
 ## Diving
 
 A diver flashes red for half a second first — that's your warning. Then it
 follows a bezier curve down at you. Five patterns: `straight`, `curved`,
 `zigzag`, `fast` and `sweep`, set per enemy scene via the `dive_pattern` export.
 Survivors loop around the top of the screen and rejoin their slot.
+
+## Capture and the Dual Fighter
+
+From wave 4, the Moth (`captures = true`) can peel off, hover above the
+player, and open an original tractor beam (`scripts/tractor_beam.gd` — a
+widening pixel cone with sliding scan bands). The beam telegraphs for over a
+second before it can actually hold the player, and only holds for a full
+second of continuous contact, so it's always escapable by moving away.
+
+If it succeeds, the player's ship is pulled into the formation (costs one
+health, not a full life) and stays visibly docked under the captor. **Destroy
+that specific enemy** and the captured ship flies free and joins as a **Dual
+Fighter**: a wingman that mirrors the player's movement and fires one modest
+bolt per shot cycle, regardless of the main weapon. One hit knocks the wingman
+back off rather than costing a life — that's the price of the extra firepower.
 
 ## Difficulty progression
 
@@ -213,6 +243,22 @@ rather than everything at once:
 On top of that, formations grow, `speed_scale` rises, and the dive timer
 shortens (up to 3 divers at once).
 
+## Challenge stages
+
+Every 5th stage starting at wave 3 (`CHALLENGE_EVERY`/`CHALLENGE_OFFSET` in
+`spawner.gd`) is a Challenge Stage: four squads fly choreographed routes
+(figure-eight, spiral, double arc, zigzag comb) straight across the screen and
+leave — no diving, no shooting back, pure marksmanship. Hits are tracked
+(`Global.challenge_hits` / `challenge_total`); a `HITS n/24` bonus is paid out,
+and destroying every enemy pays an extra `PERFECT` bonus.
+
+## Sectors
+
+Every 5-wave block between bosses is announced as a `SECTOR n` banner
+(`sector_started` signal), giving the wave→boss cadence a visible shape instead
+of just climbing numbers. The boundary is deliberately reused rather than a
+separate system — `BOSS_EVERY` already defines it.
+
 ## Scoring
 
 - **Combo** — each kill within 2.2 seconds of the last raises the combo.
@@ -224,6 +270,42 @@ shortens (up to 3 divers at once).
   `user://highscore.save` when the run ends (`Global.end_run()`) and on exit, so
   a hot streak does not rewrite the file on every kill. It shows on the title
   screen, the HUD and the game over board.
+
+## Power-ups
+
+Six kinds, weighted so **rapid fire** is common and **smart bomb** / **slow
+motion** are rare (`POWER_WEIGHTS` in `enemy.gd`). Each drop is tinted to its
+kind and carries a single-letter pixel-font label (R/T/L/S/B/W) — no new art
+assets needed.
+
+| Kind | Effect |
+|---|---|
+| Rapid (R) | Faster fire rate for 7s — the original power-up, unchanged |
+| Triple (T) | Forces a 3-way spread for 8s, any ship |
+| Laser (L) | Forces the piercing orb for 8s, any ship |
+| Shield (S) | Full invulnerability for 6s — also blocks capture |
+| Bomb (B) | Instant: damages every enemy on screen, clears enemy bullets |
+| Slow (W) | 4 real seconds at half game speed (`Engine.time_scale`) |
+
+## Bosses
+
+`boss.gd` escalates through **four health-based phases** (100%→66%→33%→15%,
+`_phase_for()`), each unlocking more of a shared attack pool
+(`PHASE_POOLS`) and moving faster (`PHASE_MOVE_MULT`). A phase change is a
+distinct beat: screen shake, a colour-shift flash, and a `PHASE 2` /
+`PHASE 3` / `ENRAGED` banner, with the boss health bar recolouring to match.
+Two attacks are new to phase 2+: a sweeping bullet curtain and, in the final
+enraged phase, a spiral bloom. Adding a new boss means instancing this scene
+with different stats — the phase/pattern system is all data, not per-boss code.
+
+## Top 10 leaderboard
+
+A real local Top 10, not five hard-coded names. Scores persist to
+`user://leaderboard.save` (`Global.leaderboard`, seeded once from the same
+`RANKS` fallback names). Beating the 10th-place score triggers a dedicated
+initials-entry screen (arrow keys cycle letters and move between slots, Enter
+confirms) before the familiar game-over board, which now shows all 10 rows and
+highlights whichever one you just added.
 
 ## Project layout
 
@@ -240,14 +322,19 @@ scripts/
   sfx.gd               autoload "Sfx"  — pooled player, Sfx.play() / Sfx.play_varied()
   logo.gd              the drawn STARBYTE wordmark
   stage_flags.gd       bottom-right stage flags, drawn in code
+  tractor_beam.gd      the capture beam's cone-and-scan-bands visual
+  shield_fx.gd         pulsing ring drawn around a shielded ship
+  music.gd             autoload "Music" — looping background tracks, see music/
   attract.gd           idle attract-mode fly-bys on the title screen
   bg.gd                scrolling pixel starfield, drawn in code (no texture)
   explosion.gd         pixel-block shockwave, chunky shards and a hot core
   camera_shake.gd      listens to Global.shake_requested
   trail.gd             player engine trail
   floating_text.gd     floats a label up and fades it
+music/                 drop original tracks here — see music/README.md
 components/
-  player.tscn/.gd      the player ship
+  player.tscn/.gd      the player ship, capture/rescue, Dual Fighter, power-ups
+  tractor_beam.tscn    the capture beam scene
   enemy.gd             shared by enemy_one, enemy_fast, enemy_two, enemy_special,
                        meteor and powerup — a small state machine
   boss.tscn/.gd        mini-boss with three attack patterns
@@ -291,5 +378,11 @@ and `powerUp`. Nothing polls anything — it's all signals.
   Inspector (`health`, `speed`, `score_value`, `dive_pattern`, `shoots`).
 - **Ship feel:** the `match Global.chosen_ship` block in `components/player.gd`
   (`shoot_laser`) sets the fire rate and shot pattern for each ship.
-- **Cabinet rankings:** `Global.RANKS` in `scripts/global.gd`.
+- **Cabinet rankings:** `Global.RANKS` in `scripts/global.gd` (seeds a fresh
+  leaderboard; the real Top 10 then lives in `user://leaderboard.save`).
+- **Power-up odds:** `POWER_WEIGHTS` in `components/enemy.gd`.
+- **Attack plans:** `_pick_plan()` in `components/spawner.gd`.
+- **Boss phases:** the `PHASE_*` arrays at the top of `components/boss.gd`.
+- **Music:** drop tracks into `music/` per `music/README.md` — nothing else
+  to configure.
 - **Attract mode:** `idle_delay` and `squad_gap` on the `Attract` node.

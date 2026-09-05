@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" path="res://art/ship2.svg" id="3_s2"]
 [ext_resource type="Texture2D" path="res://art/ship3.svg" id="4_s3"]
 [ext_resource type="Script" path="res://scripts/trail.gd" id="5_trail"]
+[ext_resource type="Script" path="res://scripts/shield_fx.gd" id="6_shield"]
 
 [sub_resource type="CircleShape2D" id="Circ_player"]
 radius = 17.0
@@ -35,6 +36,11 @@ texture = ExtResource("3_s2")
 visible = false
 texture = ExtResource("4_s3")
 
+[node name="Wingman" type="Sprite2D" parent="ships"]
+visible = false
+position = Vector2(46, 6)
+texture = ExtResource("2_s1")
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("Circ_player")
 
@@ -45,10 +51,25 @@ position = Vector2(0, -46)
 wait_time = 0.24
 one_shot = true
 
+[node name="ShieldFX" type="Node2D" parent="."]
+visible = false
+z_index = 2
+script = ExtResource("6_shield")
+
 [node name="TimerPowerUp" type="Timer" parent="."]
 wait_time = 7.0
+one_shot = true
+
+[node name="TimerWeapon" type="Timer" parent="."]
+wait_time = 8.0
+one_shot = true
+
+[node name="TimerShield" type="Timer" parent="."]
+wait_time = 6.0
 one_shot = true
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
 [connection signal="timeout" from="TimerToShoot" to="." method="_on_timer_to_shoot_timeout"]
 [connection signal="timeout" from="TimerPowerUp" to="." method="_on_timer_power_up_timeout"]
+[connection signal="timeout" from="TimerWeapon" to="." method="_on_timer_weapon_timeout"]
+[connection signal="timeout" from="TimerShield" to="." method="_on_timer_shield_timeout"]

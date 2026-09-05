@@ -20,18 +20,23 @@ var _sizes: PackedFloat32Array = PackedFloat32Array()
 var _alphas: PackedFloat32Array = PackedFloat32Array()
 var _phases: PackedFloat32Array = PackedFloat32Array()
 var _colors: PackedColorArray = PackedColorArray()
+var _depths: PackedFloat32Array = PackedFloat32Array()
 var _screen := Vector2(840, 1080)
 var _t := 0.0
 
 
 func _ready() -> void:
 	_screen = get_viewport_rect().size
+	# Depth ties speed, size and brightness together so the field reads as
+	# parallax layers rather than independently random dots.
 	for i in star_count:
+		var depth := randf()
 		_positions.append(Vector2(randf() * _screen.x, randf() * _screen.y))
-		_speeds.append(randf_range(20.0, 150.0))
-		_sizes.append(3.0 if randf() < 0.72 else 6.0)
-		_alphas.append(randf_range(0.3, 1.0))
+		_speeds.append(lerpf(16.0, 165.0, depth))
+		_sizes.append(3.0 if depth < 0.6 else 6.0)
+		_alphas.append(lerpf(0.28, 1.0, depth))
 		_phases.append(randf() * TAU)
+		_depths.append(depth)
 		_colors.append(STAR_COLORS[randi() % STAR_COLORS.size()])
 
 
@@ -47,6 +52,10 @@ func _process(delta: float) -> void:
 		if pos.y > _screen.y + 4.0:
 			pos.y = -4.0
 			pos.x = randf() * _screen.x
+			_depths[i] = randf()
+			_speeds[i] = lerpf(16.0, 165.0, _depths[i])
+			_sizes[i] = 3.0 if _depths[i] < 0.6 else 6.0
+			_alphas[i] = lerpf(0.28, 1.0, _depths[i])
 		_positions[i] = pos
 	queue_redraw()
 

@@ -23,6 +23,7 @@ dive_speed = 380.0
 dive_pattern = "zigzag"
 return_chance = 0.8
 drops_powerup = true
+captures = true
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")

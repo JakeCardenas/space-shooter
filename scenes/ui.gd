@@ -23,6 +23,12 @@ const CURSOR_Y := {1: 424.0, 2: 476.0, 3: 528.0}
 @onready var _start_screen: Control = $CanvasLayer/startScreen
 @onready var _in_game_screen: Control = $CanvasLayer/inGameScreen
 @onready var _game_over_screen: Control = $CanvasLayer/gameOverScreen
+@onready var _initials_screen: Control = $CanvasLayer/initialsScreen
+@onready var _initial_slots: Array[Label] = [
+	$CanvasLayer/initialsScreen/slots/slot0,
+	$CanvasLayer/initialsScreen/slots/slot1,
+	$CanvasLayer/initialsScreen/slots/slot2,
+]
 @onready var _cursor: Label = $CanvasLayer/startScreen/MenuCursor
 @onready var _preview: Sprite2D = $CanvasLayer/startScreen/ShipPreview
 @onready var _wave_label: Label = $CanvasLayer/inGameScreen/LabelWave
@@ -52,6 +58,7 @@ func _ready() -> void:
 	_start_screen.visible = true
 	_in_game_screen.visible = false
 	_game_over_screen.visible = false
+	_initials_screen.visible = false
 	_wave_label.visible = false
 	_bonus_label.visible = false
 	_boss_bar.visible = false
@@ -66,6 +73,9 @@ func _ready() -> void:
 	Global.high_score_beaten.connect(_on_high_score_beaten)
 	_spawner.wave_started.connect(_on_wave_started)
 	_spawner.stage_ready.connect(_on_stage_ready)
+	_spawner.sector_started.connect(_on_sector_started)
+	_spawner.challenge_started.connect(_on_challenge_started)
+	_spawner.challenge_finished.connect(_on_challenge_finished)
 	_spawner.wave_cleared.connect(_on_wave_cleared)
 	_spawner.boss_spawned.connect(_on_boss_spawned)
 
@@ -74,6 +84,7 @@ func _ready() -> void:
 	_update_ship_preview()
 	_update_mute_labels()
 	_flash_start_button()
+	Music.play("menu")
 
 
 func _all_buttons() -> Array:
@@ -95,6 +106,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			_select_ship(Global.chosen_ship - 1)
 		elif event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
 			_select_ship(Global.chosen_ship + 1)
+	elif _initials_screen.visible:
+		if event.is_action_pressed("ui_up"):
+			Global.cycle_initial(1)
+			_refresh_initial_slots()
+		elif event.is_action_pressed("ui_down"):
+			Global.cycle_initial(-1)
+			_refresh_initial_slots()
+		elif event.is_action_pressed("ui_left"):
+			Global.move_initial_cursor(-1)
+			_refresh_initial_slots()
+		elif event.is_action_pressed("ui_right"):
+			Global.move_initial_cursor(1)
+			_refresh_initial_slots()
+		elif event.is_action_pressed("ui_accept"):
+			_on_button_confirm_initials_pressed()
 	elif _game_over_screen.visible and event.is_action_pressed("ui_accept"):
 		_on_button_menu_pressed()
 
@@ -103,6 +129,10 @@ func _process(delta: float) -> void:
 	if _start_screen.visible:
 		_menu_time += delta
 		_animate_selection()
+		return
+	if _initials_screen.visible:
+		_menu_time += delta
+		_blink_initial_cursor()
 		return
 	if not Global.game_on:
 		return
@@ -124,6 +154,21 @@ func _process(delta: float) -> void:
 func _animate_selection() -> void:
 	_preview.scale = Vector2.ONE * (2.0 + sin(_menu_time * 5.0) * 0.07)
 	_cursor.modulate.a = 1.0 if fposmod(_menu_time, 0.7) < 0.45 else 0.15
+
+
+func _refresh_initial_slots() -> void:
+	var letters := Global.initial_letters()
+	var cursor := Global.initial_cursor()
+	for i in _initial_slots.size():
+		_initial_slots[i].text = letters[i]
+		var active := i == cursor
+		_initial_slots[i].modulate = Color(1.0, 0.83, 0.36) if active else Color(0.6, 0.68, 0.82)
+
+
+func _blink_initial_cursor() -> void:
+	var cursor := Global.initial_cursor()
+	var slot := _initial_slots[cursor]
+	slot.modulate.a = 1.0 if fposmod(_menu_time, 0.6) < 0.4 else 0.25
 
 
 func _flash_start_button() -> void:
@@ -170,9 +215,28 @@ func _on_wave_started(wave: int) -> void:
 	_banner("STAGE %d" % wave, Color(0.35, 0.85, 1.0), 0.75)
 
 
+func _on_sector_started(sector: int) -> void:
+	_banner("SECTOR %d" % sector, Color(0.6, 0.9, 1.0), 1.0)
+
+
+func _on_challenge_started(_wave: int) -> void:
+	_banner("CHALLENGE\nSTAGE", Color(1.0, 0.83, 0.36), 0.9)
+	Music.play("challenge")
+
+
+func _on_challenge_finished(hits: int, total: int, perfect: bool) -> void:
+	Music.play("gameplay")
+	if perfect:
+		_banner("PERFECT!", Color(1.0, 0.83, 0.36), 1.1)
+	else:
+		_banner("%d / %d" % [hits, total], Color(0.35, 0.85, 1.0), 0.9)
+
+
 func _on_stage_ready(wave: int) -> void:
 	if wave % 5 == 0:
 		_banner("WARNING\nELITE WAVE", Color(1.0, 0.3, 0.35), 0.45)
+	elif Global.challenge_active or wave % 5 == 3:
+		_banner("SHOOT THEM ALL", Color(1.0, 0.83, 0.36), 0.5)
 	else:
 		_banner("READY", Color(1.0, 0.3, 0.35), 0.35)
 
@@ -182,14 +246,32 @@ func _on_wave_cleared(_wave: int) -> void:
 
 
 func _on_boss_spawned(boss: Node) -> void:
+	Music.play("boss")
 	_boss_bar.visible = true
 	$CanvasLayer/inGameScreen/BossBar/Fill.scale.x = 1.0
+	$CanvasLayer/inGameScreen/BossBar/Fill.color = Color(1, 0.239216, 0.431373, 1)
 	boss.health_changed.connect(func(fraction: float) -> void:
 		if is_inside_tree():
 			$CanvasLayer/inGameScreen/BossBar/Fill.scale.x = fraction)
+	boss.phase_changed.connect(_on_boss_phase_changed)
 	boss.died.connect(func() -> void:
 		if is_inside_tree():
-			_boss_bar.visible = false)
+			_boss_bar.visible = false
+			Music.play("gameplay"))
+
+
+const PHASE_BAR_COLORS := [
+	Color(1, 0.239216, 0.431373, 1),
+	Color(1, 0.6, 0.2, 1),
+	Color(1, 0.85, 0.2, 1),
+	Color(1, 0.15, 0.15, 1),
+]
+const PHASE_NAMES := ["", "PHASE 2", "PHASE 3", "ENRAGED"]
+
+func _on_boss_phase_changed(phase: int) -> void:
+	$CanvasLayer/inGameScreen/BossBar/Fill.color = PHASE_BAR_COLORS[phase]
+	if phase > 0:
+		_banner(PHASE_NAMES[phase], PHASE_BAR_COLORS[phase], 0.5)
 
 
 # --- score feedback --------------------------------------------------------
@@ -254,20 +336,39 @@ func _show_game_over() -> void:
 	if not is_inside_tree():
 		return
 	_in_game_screen.visible = false
+
+	if Global.qualifies_for_leaderboard():
+		Global.begin_initials_entry()
+		$CanvasLayer/initialsScreen/LabelScore.text = "SCORE %d" % Global.score
+		_refresh_initial_slots()
+		_initials_screen.visible = true
+		Music.play("high_score")
+	else:
+		_reveal_game_over()
+
+
+func _on_button_confirm_initials_pressed() -> void:
+	Sfx.play("new_high_score", -3.0)
+	Global.submit_leaderboard_entry()
+	_initials_screen.visible = false
+	_reveal_game_over()
+
+
+func _reveal_game_over() -> void:
+	Music.play("game_over")
 	$CanvasLayer/gameOverScreen/LabelScore.text = "SCORE %d" % Global.score
 	$CanvasLayer/gameOverScreen/LabelWaveReached.text = "REACHED WAVE %d" % maxi(Global.wave, 1)
-	$CanvasLayer/gameOverScreen/LabelNewBest.visible = Global.new_high_score
 	_fill_ranking()
 	_game_over_screen.visible = true
 
 
 func _fill_ranking() -> void:
-	var rows := Global.ranking()
+	var rows := Global.leaderboard
 	for i in rows.size():
-		var row: Array = rows[i]
+		var row: Dictionary = rows[i]
 		var label: Label = $CanvasLayer/gameOverScreen/ranks.get_child(i)
-		label.text = "%d  %-4s %7d" % [i + 1, row[0], row[1]]
-		label.modulate = Color(1.0, 0.83, 0.36) if row[0] == "YOU" else Color(0.72, 0.79, 0.9)
+		label.text = "%2d %-4s %8d" % [i + 1, row["name"], row["score"]]
+		label.modulate = Color(1.0, 0.83, 0.36) if i == Global.last_leaderboard_rank else Color(0.72, 0.79, 0.9)
 
 
 func _update_mute_labels() -> void:
@@ -297,6 +398,7 @@ func _on_button_choose_pressed() -> void:
 	_in_game_screen.visible = true
 	Global.game_on = true
 	_banner("START", Color(1.0, 0.3, 0.35), 0.5)
+	Music.play("gameplay")
 
 
 func _on_button_mute_pressed() -> void:
