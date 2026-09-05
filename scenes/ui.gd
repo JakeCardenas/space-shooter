@@ -1,7 +1,5 @@
 extends Node2D
 
-# Lives on the main scene. Owns the attract/select screen, the arcade HUD, the
-# wave banner, the combo readout, the boss bar and the game over board.
 
 const SHIP_NAMES := {
 	1: "ACE",
@@ -59,8 +57,6 @@ func _ready() -> void:
 	_boss_bar.visible = false
 	_combo_label.text = ""
 
-	# Buttons must not hold focus, or ENTER would re-press the last one clicked
-	# instead of starting the game.
 	for button in _all_buttons():
 		button.focus_mode = Control.FOCUS_NONE
 
