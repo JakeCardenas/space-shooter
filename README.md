@@ -34,6 +34,20 @@ The export produces `index.html`, `index.js`, `index.wasm`, `index.pck`, the
 audio worklets and the icons. **All of them must be committed** — Vercel serves
 them as-is.
 
+### The loading screen
+
+`web/index.html` is generated from **`web_shell/index.html`** (set as
+`html/custom_html_shell` in the export preset), which replaces Godot's default
+loader with a STARBYTE one: the pixel wordmark, an arcade progress bar and
+`LOADING nn%` drawn with the same glyphs as the in-game bitmap font, over a
+drifting starfield. The engine's own boot splash is disabled via
+`boot_splash/show_image=false`, so nothing Godot-branded is ever shown.
+
+Edit `web_shell/index.html` to change it, then re-export. Do **not** edit
+`web/index.html` directly — `export_web.sh` wipes `web/` on every run. The
+`$GODOT_*` placeholders in the shell are substituted by Godot at export time and
+must be left intact.
+
 ### Test locally
 
 Browsers refuse to load `.wasm` from `file://`, so serve it over HTTP:
@@ -244,6 +258,7 @@ art/                   pixel-grid SVG sprites
 art/font/              generated bitmap pixel font
 sfx/                   WAV sound effects
 export_presets.cfg     the "Web" export preset (exports to web/index.html)
+web_shell/index.html   custom boot/loading screen used by the Web export
 export_web.sh          one-command Web export
 vercel.json            static-host headers for the Godot Web build
 web/                   committed Web export — this is Vercel's Output Directory
