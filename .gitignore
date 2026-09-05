@@ -1,3 +1,6 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# The Vercel deploy serves the committed Godot Web export in web/,
+# so that folder is deliberately NOT ignored.

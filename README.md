@@ -4,6 +4,73 @@ A vertical arcade space shooter built in Godot 4.7. Everything it needs is in
 this repo — the sprites are pixel-grid SVGs, the font is a generated bitmap
 font, and the sound effects are WAVs, so there are no missing assets.
 
+## Web build and deployment
+
+The repository ships a ready-to-serve Godot Web export in **`web/`**. Vercel is
+configured to serve that folder as a static site — there is no Node build step.
+
+### Requirements (one time)
+
+Web export needs Godot's **export templates** for your exact version
+(4.7.2.stable). In the editor: *Editor -> Manage Export Templates -> Download
+and Install*. Without them the export fails with "No export template found".
+
+### Export for Web
+
+From the project root:
+
+```bash
+GODOT="/Applications/Godot.app/Contents/MacOS/Godot" ./export_web.sh
+```
+
+If `godot` is already on your PATH, just `./export_web.sh`. The script wipes
+`web/`, re-imports assets, then exports the `Web` preset from
+`export_presets.cfg` to `web/index.html`.
+
+You can also do it from the editor: *Project -> Export -> Web -> Export
+Project*, saving to `web/index.html`.
+
+The export produces `index.html`, `index.js`, `index.wasm`, `index.pck`, the
+audio worklets and the icons. **All of them must be committed** — Vercel serves
+them as-is.
+
+### Test locally
+
+Browsers refuse to load `.wasm` from `file://`, so serve it over HTTP:
+
+```bash
+cd web && python3 -m http.server 8123
+```
+
+Then open <http://127.0.0.1:8123>.
+
+### Push to GitHub
+
+```bash
+git add -A && git commit -m "Update Web export" && git push origin main
+```
+
+### Deploy to Vercel
+
+Import the repo at <https://vercel.com/new>, then set:
+
+| Setting | Value |
+|---|---|
+| Framework Preset | **Other** |
+| Build Command | *(leave empty)* |
+| Output Directory | **`web`** |
+| Install Command | *(leave empty)* |
+
+Vercel redeploys on every push to `main`. `vercel.json` sets the
+`Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy` headers Godot
+needs for cross-origin isolation, the correct `Content-Type` for `.wasm` and
+`.pck`, and long-lived caching for the build assets while keeping `index.html`
+uncached so new deploys appear immediately.
+
+> The `Web` preset has `variant/thread_support=false`, so the build also runs on
+> static hosts that cannot set those headers. If you turn threads back on, the
+> headers in `vercel.json` become mandatory.
+
 ## Playing
 
 Open the project in Godot and press **F5** (or the Play button).
@@ -176,6 +243,10 @@ components/
 art/                   pixel-grid SVG sprites
 art/font/              generated bitmap pixel font
 sfx/                   WAV sound effects
+export_presets.cfg     the "Web" export preset (exports to web/index.html)
+export_web.sh          one-command Web export
+vercel.json            static-host headers for the Godot Web build
+web/                   committed Web export — this is Vercel's Output Directory
 ```
 
 ## How the pieces talk to each other
