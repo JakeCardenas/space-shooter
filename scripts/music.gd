@@ -17,6 +17,8 @@ const FADE_TIME := 0.6
 var _player: AudioStreamPlayer
 var _current := ""
 var _fade_tween: Tween = null
+var _unlocked := false
+var _pending := ""
 
 
 func _ready() -> void:
@@ -25,6 +27,10 @@ func _ready() -> void:
 	_player.volume_db = VOLUME_DB
 	add_child(_player)
 	_player.finished.connect(_on_finished)
+	# Browsers refuse to start audio before the first user gesture, so on the
+	# web the first requested track waits for a click or key press. Native
+	# builds have no such restriction and start immediately.
+	_unlocked = not OS.has_feature("web")
 
 
 func track_path(track: String) -> String:
@@ -41,6 +47,9 @@ func play(track: String) -> void:
 	var path := track_path(track)
 	if path == "":
 		return  # nothing supplied for this track — keep the current one going
+	if not _unlocked:
+		_pending = track
+		return
 	_current = track
 
 	var stream := load(path)
@@ -69,6 +78,18 @@ func stop() -> void:
 	_fade_tween.tween_property(_player, "volume_db", -40.0, FADE_TIME)
 	await _fade_tween.finished
 	_player.stop()
+
+
+func _input(event: InputEvent) -> void:
+	if _unlocked:
+		return
+	if event is InputEventMouseButton or event is InputEventKey \
+			or event is InputEventScreenTouch:
+		_unlocked = true
+		if _pending != "":
+			var track := _pending
+			_pending = ""
+			play(track)
 
 
 func _on_finished() -> void:
