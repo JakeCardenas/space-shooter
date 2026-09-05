@@ -1,31 +1,32 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://components/enemy.gd" id="1_en"]
-[ext_resource type="Texture2D" path="res://art/enemy_fast.svg" id="2_tex"]
+[ext_resource type="Texture2D" path="res://art/enemy_guard.svg" id="2_tex"]
 
-[sub_resource type="CircleShape2D" id="Circ_ef"]
-radius = 18.0
+[sub_resource type="CircleShape2D" id="Circ_eg"]
+radius = 20.0
 
-[node name="EnemyFast" type="Area2D" groups=["enemy"]]
+[node name="EnemyGuard" type="Area2D" groups=["enemy"]]
 collision_layer = 1
 collision_mask = 1
 script = ExtResource("1_en")
-health = 1
-speed = 220.0
-score_value = 20
+health = 6
+speed = 120.0
+score_value = 60
 kind = "ship"
 contact_damage = 1
-explosion_radius = 36.0
+explosion_radius = 54.0
+big_explosion = true
 formation_member = true
-entry_speed = 1225.0
-dive_speed = 640.0
-dive_pattern = "fast"
-return_chance = 0.25
+entry_speed = 770.0
+dive_speed = 300.0
+dive_pattern = "sweep"
+return_chance = 0.6
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("Circ_ef")
+shape = SubResource("Circ_eg")
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]

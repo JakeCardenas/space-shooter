@@ -1,8 +1,8 @@
-# Space Shooter
+# STARBYTE
 
-A small arcade space shooter built in Godot 4.7. Everything it needs is in this
-repo — the sprites are SVGs and the sound effects were generated as WAVs, so
-there are no missing assets to hunt down.
+A vertical arcade space shooter built in Godot 4.7. Everything it needs is in
+this repo — the sprites are pixel-grid SVGs, the font is a generated bitmap
+font, and the sound effects are WAVs, so there are no missing assets.
 
 ## Playing
 
@@ -10,8 +10,9 @@ Open the project in Godot and press **F5** (or the Play button).
 
 - **Hold the left mouse button** to fly toward the cursor *and* fire at the same time.
 - Release to stop moving and stop shooting.
+- On the title screen, **←/→** pick a ship and **ENTER** starts. **ENTER** also restarts from game over.
 - You have 3 health. Enemy ships cost 1, meteors cost 2.
-- Grab the yellow ⚡ power-up for ~7 seconds of faster fire.
+- Grab the ⚡ power-up for ~7 seconds of faster fire.
 
 Three ships to pick from:
 
@@ -21,63 +22,146 @@ Three ships to pick from:
 | TANK | Triple spread shot | 0.50s |
 | ZAP  | Piercing plasma orb (3 damage, passes through) | 0.80s |
 
-## Waves and formations
+## Presentation
 
-The game runs in arcade waves. Each wave builds a formation of slots at the top
-of the screen, flies the enemies in one at a time along curved paths, then holds
-them in a slowly swaying grid while picking divers. Clear every enemy and the
-next wave starts.
+The game runs at a fixed **840x1080** portrait viewport with
+`stretch/aspect = keep`, so it letterboxes like an upright arcade cabinet
+instead of stretching the HUD. That is exactly **7:9** — the Galaga-era arcade
+ratio (224x288) — and at that width a 60px sprite is **7.14%** of the playfield,
+the same proportion a 16px sprite has on a 224px arcade screen. Column pitch
+(78px) is 9.3% of the width, matching the arcade formation density.
+All textures use **nearest-neighbour filtering** (`default_texture_filter = 0`)
+and every sprite is drawn on a 4-unit pixel grid, so nothing ever goes blurry.
 
-Formation shapes cycle by wave number: **grid → V → arc → clusters**, growing
-wider and deeper as you progress. Every **5th wave is a boss** instead.
+All sprites are drawn as insectoid creatures in bold arcade primaries — red,
+blue, yellow, green, purple — with white eye bands, yellow antenna tips and
+two-tone wing shading. Creatures and ships sit on a 2-unit pixel grid (60px
+wide, 7.14% of the 840px playfield); props and shots use a 3-unit grid.
 
-Difficulty ramps through enemy speed (`speed_scale`), formation size, and how
-often divers are picked (up to 3 at a time).
+- `art/font/starbyte.fnt` + `.png` — a 5x8 bitmap font covering A-Z, 0-9 and
+  punctuation, with lowercase mapped onto the uppercase glyphs. It is the
+  `default_font` of `scenes/theme.tres`, so every label picks it up. **Use font
+  sizes that are multiples of 8** (16, 24, 32, 40, 48…) to keep glyphs on exact
+  integer scales.
+- `scripts/logo.gd` — the STARBYTE wordmark, drawn as a blocky grid with a hue
+  sweep across the letters and an occasional marquee flicker.
+- `scripts/bg.gd` — square, colour-varied pixel stars that twinkle and snap to
+  whole pixels.
+
+## Screens
+
+**Title / attract** — a cabinet attract screen: `1UP` / `HIGH SCORE` header row
+(red labels, white values), the logo, a large preview of the selected ship, a
+`▶` cursor menu listing ACE / TANK / ZAP, the ship blurb, a flashing
+`PRESS START` and a copyright footer. Up/down (or left/right) moves the cursor,
+ENTER starts. After 6 seconds without input, `scripts/attract.gd` flies
+decorative enemy squads across the background. Those are plain `Sprite2D`s, not
+real enemies, so attract mode never touches the gameplay systems.
+
+**HUD** — blinking `1UP` and score top-left, `HIGH SCORE` top-centre, combo
+top-right, lives as ship icons bottom-left, and **stage flags** bottom-right
+(`scripts/stage_flags.gd` — one blue flag per ten stages, one small orange flag
+for each stage after that).
+
+**Game over** — score, wave reached, and a high-score table mixing the fictional
+cabinet entries in `Global.RANKS` with your own best, highlighted as `YOU`.
+
+## Stages and formations
+
+Every stage opens with the arcade beat sequence — `STAGE n` in cyan, then
+`READY` in red (or `WARNING / ELITE WAVE` on a boss stage) — before the
+formation flies in. The very first stage also shows `START`.
+
+The formation is one **tiered block**, built in `_build_layout()`:
+
+```
+        [ elites ]          <- top row, narrow, centred
+     [  mid-tier   ]        <- second row
+   [   light enemies   ]    <- wide rows
+   [   light enemies   ]
+   [   light enemies   ]    <- added from stage 4
+```
+
+Enemy type follows the row rather than being random: the top row is Crabs (and
+Guards from stage 8), the second row Dragonflies (and Wasps from stage 4), and
+the wide rows below are Bats. One Moth is swapped in per stage. The block widens
+from 6 to 8 columns as you progress, and the whole thing sways as a unit.
+
+Enemies enter in **squads of six that share one route** (`SQUAD_SIZE`), each
+launching 0.09s after the one ahead, so a squad trails head-to-tail like a
+snake. A route sweeps in low from one side, carves a **full circle**, then
+climbs to the formation, where the squad fans out into its own slots. There are
+four routes (left/right x high/low loop) and they alternate between squads.
+
+`begin_entry()` in `components/enemy.gd` walks a **polyline** at constant speed
+rather than a single bezier, which is what makes a real loop possible — it
+carries leftover distance across segment boundaries so the circle stays smooth. Clear every enemy and the next stage starts after a short bonus pause.
+Every **5th stage is an elite/boss stage**.
 
 ## Enemy types
 
-| Enemy | Health | Points | Behaviour |
-|---|---|---|---|
-| Basic (red) | 1 | 10 | Curved dives, often returns to formation |
-| Fast (orange) | 1 | 20 | Steep fast dives, usually leaves the screen |
-| Strong (purple saucer) | 4 | 30 | Slow straight dives, **shoots at you** |
-| Special (teal) | 3 | 100 | Zigzag dives, **drops a power-up** |
-| Boss | 26 + 5/wave | 400 + 1000 bonus | Three attack patterns, health bar |
+| Enemy | From | Health | Points | Behaviour |
+|---|---|---|---|---|
+| **Bat** (red/blue) | wave 1 | 1 | 10 | Curved dives, often returns to formation |
+| **Dragonfly** (blue/yellow) | wave 2 | 1 | 20 | Steep fast dives, usually leaves the screen |
+| **Crab** (red/purple) | wave 3 | 4 | 30 | Slow straight dives, **shoots at you** |
+| **Wasp** (cyan/yellow) | wave 4 | 2 | 40 | Zigzag dives, **shoots**, quick and erratic |
+| **Guard** (teal armour) | wave 8 | 6 | 60 | Sweeping dives, tanky, big explosion |
+| **Moth** (green/purple) | wave 2 | 3 | 100 | One per wave, zigzag dives, **drops a power-up** |
+| **Hive Queen** (boss) | every 5th | 26 + 5/wave | 400 + 1000 bonus | Three attack patterns, health bar |
 
-Meteors still fall in as an ambient hazard during waves and still cost 2 health.
+Meteors fall in as an ambient hazard during waves and cost 2 health. Boss waves
+skip meteors and drop power-ups instead so the fight stays readable.
 
 ## Diving
 
 A diver flashes red for half a second first — that's your warning. Then it
-follows a bezier curve down at you. Four patterns: `straight`, `curved`,
-`zigzag` and `fast`, set per enemy scene via the `dive_pattern` export.
+follows a bezier curve down at you. Five patterns: `straight`, `curved`,
+`zigzag`, `fast` and `sweep`, set per enemy scene via the `dive_pattern` export.
 Survivors loop around the top of the screen and rejoin their slot.
+
+## Difficulty progression
+
+`_apply_difficulty()` in `components/spawner.gd` ramps one factor at a time
+rather than everything at once:
+
+- **wave 6+** — a quarter of the formation switches to the `sweep` dive
+- **any wave** — enemies that already shoot fire progressively faster
+- **wave 7+** — ordinary enemies start returning fire, up to a 30% chance
+
+On top of that, formations grow, `speed_scale` rises, and the dive timer
+shortens (up to 3 divers at once).
 
 ## Scoring
 
 - **Combo** — each kill within 2.2 seconds of the last raises the combo.
-  Multiplier is `1 + combo/3`, capped at 8x, shown top-right.
+  Multiplier is `1 + combo/3`, capped at 8x, shown once it reaches 2x.
 - **Wave clear** — 100 x wave number.
 - **No damage** — 250 extra for clearing a wave without being hit.
 - **Boss defeated** — 1000 on top of the boss's own value.
-- **High score** saves to `user://highscore.save` and shows on the title screen
-  and HUD.
+- **High score** is kept in memory during a run and written to
+  `user://highscore.save` when the run ends (`Global.end_run()`) and on exit, so
+  a hot streak does not rewrite the file on every kill. It shows on the title
+  screen, the HUD and the game over board.
 
 ## Project layout
 
 ```
-project.godot          autoloads, 720x1280 portrait viewport, "left_click" action
+project.godot          autoloads, 720x1280 portrait, nearest filtering, "left_click"
 scenes/
-  main.tscn            the game — background, spawner, player, and all 4 UI screens
-  ui.gd                screen switching + HUD (attached to main.tscn's root)
-  theme.tres           button styling
+  main.tscn            the game — background, attract, spawner, player, 3 UI screens
+  ui.gd                screen switching, ship select, HUD (attached to main.tscn's root)
+  theme.tres           square arcade button styling + the pixel font as default_font
   explosion.tscn       reusable, self-freeing explosion effect
   floating_text.tscn   the "+100" score popups
 scripts/
-  global.gd            autoload "Global" — run state, waves, combo, high score
+  global.gd            autoload "Global" — run state, waves, combo, high score, rankings
   sfx.gd               autoload "Sfx"  — pooled player, Sfx.play() / Sfx.play_varied()
-  bg.gd                scrolling starfield, drawn in code (no texture)
-  explosion.gd         shockwave ring, hot core and flying shards
+  logo.gd              the drawn STARBYTE wordmark
+  stage_flags.gd       bottom-right stage flags, drawn in code
+  attract.gd           idle attract-mode fly-bys on the title screen
+  bg.gd                scrolling pixel starfield, drawn in code (no texture)
+  explosion.gd         pixel-block shockwave, chunky shards and a hot core
   camera_shake.gd      listens to Global.shake_requested
   trail.gd             player engine trail
   floating_text.gd     floats a label up and fades it
@@ -88,8 +172,9 @@ components/
   boss.tscn/.gd        mini-boss with three attack patterns
   enemy_bullet.tscn    enemy projectile
   laser_*.tscn         laser_blue, laser_green, laser_orb — all share laser.gd
-  spawner.tscn/.gd     wave manager: layouts, entry paths, dive picking
-art/                   SVG sprites
+  spawner.tscn/.gd     wave manager: layouts, entry paths, dive picking, difficulty
+art/                   pixel-grid SVG sprites
+art/font/              generated bitmap pixel font
 sfx/                   WAV sound effects
 ```
 
@@ -109,11 +194,16 @@ and `powerUp`. Nothing polls anything — it's all signals.
 
 ## Knobs worth turning
 
-- **Difficulty:** `_build_layout()` in `components/spawner.gd` controls formation
-  size per wave; `BOSS_EVERY` sets the boss interval.
+- **Difficulty:** `_build_layout()` (block size and tiers), `_pick_types()`
+  (which enemy sits in which row) and `_apply_difficulty()` in
+  `components/spawner.gd`; `BOSS_EVERY` sets the boss interval.
+- **Stage intro timing:** the two `_sleep()` calls in `_start_next_wave()`.
+- **Entry choreography:** `_entry_path()` (loop radius, route positions) and
+  `SQUAD_SIZE` plus the two `_sleep()` values in `_spawn_formation()`.
 - **Dive frequency:** the `DiveTimer.wait_time` line in `_start_next_wave()`.
-- **Enemy stats:** open any of the enemy scenes and edit the exported values in
-  the Inspector (`health`, `speed`, `score_value`, `weave_amplitude`, `spin_speed`).
+- **Enemy stats:** open any enemy scene and edit the exported values in the
+  Inspector (`health`, `speed`, `score_value`, `dive_pattern`, `shoots`).
 - **Ship feel:** the `match Global.chosen_ship` block in `components/player.gd`
   (`shoot_laser`) sets the fire rate and shot pattern for each ship.
-- **Player toughness:** `max_health` on the Player node.
+- **Cabinet rankings:** `Global.RANKS` in `scripts/global.gd`.
+- **Attract mode:** `idle_delay` and `squad_gap` on the `Attract` node.

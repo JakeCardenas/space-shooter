@@ -5,23 +5,28 @@ extends Node2D
 # gap between waves. Every fifth wave is a boss instead of a formation.
 
 signal wave_started(wave: int)
+signal stage_ready(wave: int)
 signal wave_cleared(wave: int)
 signal boss_spawned(boss: Node)
 
 const FORMATION_TOP := 200.0
-const COL_SPACING := 86.0
-const ROW_SPACING := 74.0
+const COL_SPACING := 78.0
+const ROW_SPACING := 60.0
 const BOSS_EVERY := 5
+const SQUAD_SIZE := 6
 
 var _basic := preload("res://components/enemy_one.tscn")
 var _strong := preload("res://components/enemy_two.tscn")
 var _fast := preload("res://components/enemy_fast.tscn")
 var _special := preload("res://components/enemy_special.tscn")
+var _wasp := preload("res://components/enemy_wasp.tscn")
+var _guard := preload("res://components/enemy_guard.tscn")
 var _boss := preload("res://components/boss.tscn")
 var _meteor := preload("res://components/meteor.tscn")
 var _powerup := preload("res://components/powerup.tscn")
 
 var _slots: Array[Vector2] = []
+var _tiers: Array[int] = []
 var _alive: Array = []
 var _sway := 0.0
 var _cooldown := 0.0
@@ -58,7 +63,13 @@ func _start_next_wave() -> void:
 	wave_started.emit(wave)
 	Sfx.play("boss_warn" if is_boss else "wave_start", -3.0)
 
-	await _sleep(1.7)
+	await _sleep(1.5)
+	if not _active():
+		return
+
+	stage_ready.emit(wave)
+	Sfx.play("wave_start", -9.0, 1.3)
+	await _sleep(0.9)
 	if not _active():
 		return
 
@@ -88,8 +99,8 @@ func _finish_wave() -> void:
 
 
 func _spawn_formation(wave: int) -> void:
-	_slots = _build_layout(wave)
-	var types := _pick_types(wave, _slots.size())
+	_build_layout(wave)
+	var types := _pick_types(wave)
 	var scale := 1.0 + (wave - 1) * 0.045
 	_alive.clear()
 
@@ -100,11 +111,25 @@ func _spawn_formation(wave: int) -> void:
 		enemy.formation = self
 		enemy.slot_index = i
 		enemy.speed_scale = scale
+		_apply_difficulty(enemy, wave)
 		add_child(enemy)
-		enemy.begin_entry(_entry_path(i))
+		enemy.begin_entry(_entry_path(i / SQUAD_SIZE))
 		_alive.append(enemy)
 		Sfx.play("enemy_spawn", -24.0, randf_range(0.9, 1.15))
-		await _sleep(0.085)
+		# tight gap inside a squad, longer one before the next enters
+		await _sleep(0.35 if (i + 1) % SQUAD_SIZE == 0 else 0.09)
+
+
+# Difficulty ramps one factor at a time: sweeping dives appear first, then
+# faster shooting, then ordinary enemies start returning fire.
+func _apply_difficulty(enemy: Node, wave: int) -> void:
+	if wave >= 6 and randf() < 0.25:
+		enemy.dive_pattern = "sweep"
+	if enemy.shoots:
+		enemy.shoot_interval = maxf(1.1, enemy.shoot_interval - (wave - 1) * 0.09)
+	elif wave >= 7 and randf() < minf(0.06 * (wave - 6), 0.3):
+		enemy.shoots = true
+		enemy.shoot_interval = randf_range(2.8, 4.2)
 
 
 func _spawn_boss(wave: int) -> void:
@@ -118,86 +143,73 @@ func _spawn_boss(wave: int) -> void:
 
 # --- formation layouts -----------------------------------------------------
 
-func _build_layout(wave: int) -> Array[Vector2]:
+# Elites sit across the top centre, mid-tier below them, then wide rows of
+# light enemies — the classic arcade block. It grows with the wave instead of
+# changing shape every time.
+func _build_layout(wave: int) -> void:
+	_slots.clear()
+	_tiers.clear()
 	var cx := get_viewport_rect().size.x * 0.5
-	match wave % 4:
-		1:
-			return _grid(cx, clampi(4 + wave / 2, 4, 7), clampi(2 + wave / 4, 2, 4))
-		2:
-			return _vee(cx, clampi(3 + wave / 3, 3, 5))
-		3:
-			return _arc(cx, clampi(6 + wave / 2, 6, 11))
-		_:
-			return _clusters(cx, clampi(2 + wave / 6, 2, 3))
+	var wide := clampi(8 + wave / 4, 8, 10)
+
+	var plan := [
+		[maxi(2, wide - 4), 2],
+		[maxi(4, wide - 2), 1],
+		[wide, 0],
+		[wide, 0],
+	]
+	if wave >= 4:
+		plan.append([wide, 0])
+
+	for row in plan.size():
+		var count: int = plan[row][0]
+		var tier: int = plan[row][1]
+		for c in count:
+			_slots.append(Vector2(cx + (c - (count - 1) * 0.5) * COL_SPACING,
+				FORMATION_TOP + row * ROW_SPACING))
+			_tiers.append(tier)
 
 
-func _grid(cx: float, cols: int, rows: int) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	for r in rows:
-		for c in cols:
-			out.append(Vector2(cx + (c - (cols - 1) * 0.5) * COL_SPACING,
-				FORMATION_TOP + r * ROW_SPACING))
-	return out
-
-
-func _vee(cx: float, arm: int) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	out.append(Vector2(cx, FORMATION_TOP))
-	for i in range(1, arm + 1):
-		var dx := i * COL_SPACING * 0.72
-		var dy := i * ROW_SPACING * 0.6
-		out.append(Vector2(cx - dx, FORMATION_TOP + dy))
-		out.append(Vector2(cx + dx, FORMATION_TOP + dy))
-	return out
-
-
-func _arc(cx: float, count: int) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	var radius := 300.0
-	for i in count:
-		var a := lerpf(-0.85, 0.85, float(i) / maxf(1.0, count - 1.0))
-		out.append(Vector2(cx + sin(a) * radius,
-			FORMATION_TOP + 20.0 + (1.0 - cos(a)) * radius * 0.75))
-	return out
-
-
-func _clusters(cx: float, count: int) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	for k in count:
-		var bx := cx + (k - (count - 1) * 0.5) * 215.0
-		var by := FORMATION_TOP + float(k % 2) * 62.0
-		for r in 2:
-			for c in 2:
-				out.append(Vector2(bx + (c - 0.5) * 72.0, by + r * 66.0))
-	return out
-
-
-func _pick_types(wave: int, count: int) -> Array:
+func _pick_types(wave: int) -> Array:
 	var out := []
-	for i in count:
-		var roll := randf()
-		var scene = _basic
-		if wave >= 2 and roll < 0.20 + wave * 0.01:
-			scene = _fast
-		elif wave >= 3 and roll > 0.80:
-			scene = _strong
-		out.append(scene)
-	if wave >= 2 and count > 0:
-		out[randi() % count] = _special
+	for tier in _tiers:
+		match tier:
+			2:
+				out.append(_guard if wave >= 8 and randf() < 0.45 else _strong)
+			1:
+				out.append(_wasp if wave >= 4 and randf() < 0.45 else _fast)
+			_:
+				out.append(_basic)
+	if wave >= 2 and not out.is_empty():
+		out[randi() % out.size()] = _special
 	return out
 
 
-func _entry_path(i: int) -> Array:
-	var w := get_viewport_rect().size.x
-	match i % 4:
-		0:
-			return [Vector2(-140.0, 260.0), Vector2(w * 0.35, -80.0), Vector2(w * 0.85, 430.0)]
-		1:
-			return [Vector2(w + 140.0, 260.0), Vector2(w * 0.65, -80.0), Vector2(w * 0.15, 430.0)]
-		2:
-			return [Vector2(w * 0.25, -160.0), Vector2(-80.0, 400.0), Vector2(w * 0.75, 330.0)]
-		_:
-			return [Vector2(w * 0.75, -160.0), Vector2(w + 80.0, 400.0), Vector2(w * 0.25, 330.0)]
+# Each squad flies one of four routes: sweep in low from a side, carve a full
+# circle, then climb to the formation. Because the whole squad shares the route
+# and enters a fraction of a second apart, they trail head-to-tail like a snake.
+func _entry_path(route: int) -> PackedVector2Array:
+	var screen := get_viewport_rect().size
+	var from_left := route % 2 == 0
+	var high := route < 2
+	var side := -1.0 if from_left else 1.0
+	var loop_centre := Vector2(screen.x * (0.34 if from_left else 0.66),
+		screen.y * (0.44 if high else 0.56))
+	var radius := 132.0
+
+	var points := PackedVector2Array()
+	points.append(Vector2(screen.x * 0.5 + side * (screen.x * 0.5 + 150.0), screen.y * 0.92))
+	points.append(Vector2(screen.x * 0.5 + side * 120.0, screen.y * 0.84))
+	points.append(loop_centre + Vector2(0.0, radius))
+
+	# one full turn, sampled finely enough to read as a circle
+	var turn := 1.0 if from_left else -1.0
+	for i in range(1, 29):
+		var angle := PI * 0.5 + turn * TAU * float(i) / 28.0
+		points.append(loop_centre + Vector2(cos(angle), sin(angle)) * radius)
+
+	points.append(Vector2(loop_centre.x - side * 60.0, screen.y * 0.26))
+	return points
 
 
 # --- slots (read by the enemies each frame) --------------------------------
@@ -235,7 +247,11 @@ func _on_dive_timer_timeout() -> void:
 func _on_meteor_timer_timeout() -> void:
 	if not _wave_running or not _active():
 		return
-	var scene = _powerup if randf() < 0.18 else _meteor
+	# Boss waves stay clean so the fight reads clearly — power-ups only.
+	var boss_wave := Global.wave % BOSS_EVERY == 0
+	if boss_wave and randf() > 0.4:
+		return
+	var scene = _powerup if boss_wave or randf() < 0.18 else _meteor
 	var new_node = scene.instantiate()
 	new_node.position = Vector2(randf_range($lPoint.position.x, $rPoint.position.x), -100.0)
 	add_child(new_node)

@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/enemy_bullet.svg" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_eb"]
-radius = 7.0
+radius = 5.0
 
 [node name="EnemyBullet" type="Area2D" groups=["enemyLaser"]]
 z_index = 2

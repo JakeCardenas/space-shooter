@@ -47,7 +47,7 @@ func _process(delta: float) -> void:
 			_entering = false
 		return
 
-	position.x = _center_x + sin(_t * 0.7) * 200.0
+	position.x = _center_x + sin(_t * 0.7) * 250.0
 	position.y = _hover_y + sin(_t * 1.3) * 18.0
 
 	_pattern_timer -= delta
@@ -85,7 +85,7 @@ func _spawn_bullet(direction: Vector2) -> void:
 	bullet.direction = direction
 	bullet.speed = 430.0
 	get_parent().add_child(bullet)
-	bullet.global_position = global_position + Vector2(0.0, 60.0)
+	bullet.global_position = global_position + Vector2(0.0, 44.0)
 
 
 func take_damage(amount: int) -> void:
@@ -118,11 +118,11 @@ func explode(award_score: bool) -> void:
 		if not is_inside_tree():
 			return
 		var boom = _explosion.instantiate()
-		boom.radius = randf_range(60.0, 130.0)
+		boom.radius = randf_range(42.0, 90.0)
 		boom.duration = 0.6
 		boom.shards = 12
 		get_parent().add_child(boom)
-		boom.global_position = global_position + Vector2(randf_range(-95.0, 95.0), randf_range(-50.0, 50.0))
+		boom.global_position = global_position + Vector2(randf_range(-70.0, 70.0), randf_range(-36.0, 36.0))
 		$Sprite2D.modulate = Color(1, 1, 1, 1.0 - float(i) / 7.0)
 		await get_tree().create_timer(0.09).timeout
 

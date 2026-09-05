@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/laser_orb.svg" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_orb"]
-radius = 19.0
+radius = 14.0
 
 [node name="LaserOrb" type="Area2D" groups=["laser"]]
 z_index = 2

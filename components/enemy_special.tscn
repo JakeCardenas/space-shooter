@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/enemy_special.svg" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_es"]
-radius = 30.0
+radius = 20.0
 
 [node name="EnemySpecial" type="Area2D" groups=["enemy"]]
 collision_layer = 1
@@ -15,10 +15,10 @@ speed = 170.0
 score_value = 100
 kind = "ship"
 contact_damage = 1
-explosion_radius = 78.0
+explosion_radius = 52.0
 big_explosion = true
 formation_member = true
-entry_speed = 520.0
+entry_speed = 910.0
 dive_speed = 380.0
 dive_pattern = "zigzag"
 return_chance = 0.8

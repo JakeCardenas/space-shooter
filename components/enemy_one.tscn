@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/enemy_one.svg" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_e1"]
-radius = 28.0
+radius = 18.0
 
 [node name="EnemyOne" type="Area2D" groups=["enemy"]]
 collision_layer = 1
@@ -15,9 +15,9 @@ speed = 180.0
 score_value = 10
 kind = "ship"
 contact_damage = 1
-explosion_radius = 55.0
+explosion_radius = 38.0
 formation_member = true
-entry_speed = 560.0
+entry_speed = 980.0
 dive_speed = 420.0
 dive_pattern = "curved"
 return_chance = 0.5

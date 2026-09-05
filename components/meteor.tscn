@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/meteor.svg" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_met"]
-radius = 32.0
+radius = 22.0
 
 [node name="Meteor" type="Area2D" groups=["enemy"]]
 collision_layer = 1
@@ -16,7 +16,7 @@ score_value = 2
 kind = "meteor"
 contact_damage = 2
 spin_speed = 1.5
-explosion_radius = 66.0
+explosion_radius = 44.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")

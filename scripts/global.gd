@@ -9,6 +9,16 @@ signal high_score_beaten
 const SAVE_PATH := "user://highscore.save"
 const COMBO_WINDOW := 2.2
 
+# Stand-in cabinet rankings so the board is never empty. The player's own best
+# is merged in and marked, arcade style.
+const RANKS := [
+	["NOVA", 60000],
+	["ORB", 38000],
+	["VEX", 22000],
+	["KAI", 12000],
+	["ZED", 6000],
+]
+
 var game_on := false
 var game_over := false
 var score := 0
@@ -74,10 +84,25 @@ func add_score(amount: int) -> void:
 	score += amount
 	if score > high_score:
 		high_score = score
-		save_high_score()
 	if not new_high_score and _previous_high > 0 and score > _previous_high:
 		new_high_score = true
 		high_score_beaten.emit()
+
+
+func ranking() -> Array:
+	var rows := RANKS.duplicate(true)
+	rows.append(["YOU", high_score])
+	rows.sort_custom(func(a, b): return a[1] > b[1])
+	return rows.slice(0, 5)
+
+
+func end_run() -> void:
+	game_over = true
+	save_high_score()
+
+
+func _exit_tree() -> void:
+	save_high_score()
 
 
 func shake(strength: float) -> void:

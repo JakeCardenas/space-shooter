@@ -1,60 +1,53 @@
-[gd_resource type="Theme" load_steps=5 format=3]
+[gd_resource type="Theme" load_steps=6 format=3]
+
+[ext_resource type="FontFile" path="res://art/font/starbyte.fnt" id="1_font"]
 
 [sub_resource type="StyleBoxFlat" id="SB_normal"]
-content_margin_left = 20.0
+content_margin_left = 18.0
 content_margin_top = 12.0
-content_margin_right = 20.0
+content_margin_right = 18.0
 content_margin_bottom = 12.0
-bg_color = Color(0.113725, 0.145098, 0.278431, 0.921569)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.415686, 0.658824, 0.960784, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.03, 0.05, 0.14, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.227451, 0.713726, 1, 1)
 
 [sub_resource type="StyleBoxFlat" id="SB_hover"]
-content_margin_left = 20.0
+content_margin_left = 18.0
 content_margin_top = 12.0
-content_margin_right = 20.0
+content_margin_right = 18.0
 content_margin_bottom = 12.0
-bg_color = Color(0.184314, 0.243137, 0.443137, 0.960784)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.588235, 0.796078, 1, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.098039, 0.196078, 0.407843, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.741176, 0.941176, 1, 1)
 
 [sub_resource type="StyleBoxFlat" id="SB_pressed"]
-content_margin_left = 20.0
+content_margin_left = 18.0
 content_margin_top = 12.0
-content_margin_right = 20.0
+content_margin_right = 18.0
 content_margin_bottom = 12.0
-bg_color = Color(0.415686, 0.658824, 0.960784, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.788235, 0.898039, 1, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.227451, 0.713726, 1, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 1, 1, 1)
 
 [sub_resource type="StyleBoxEmpty" id="SB_focus"]
 
 [resource]
+default_font = ExtResource("1_font")
+default_font_size = 24
 Button/colors/font_color = Color(0.858824, 0.913725, 1, 1)
 Button/colors/font_hover_color = Color(1, 1, 1, 1)
-Button/colors/font_pressed_color = Color(0.0784314, 0.0980392, 0.196078, 1)
-Button/font_sizes/font_size = 32
+Button/colors/font_pressed_color = Color(0.0392157, 0.054902, 0.121569, 1)
+Button/font_sizes/font_size = 24
+Button/fonts/font = ExtResource("1_font")
 Button/styles/focus = SubResource("SB_focus")
 Button/styles/hover = SubResource("SB_hover")
 Button/styles/normal = SubResource("SB_normal")

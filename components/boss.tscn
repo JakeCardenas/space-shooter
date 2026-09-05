@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/boss.svg" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="Rect_boss"]
-size = Vector2(200, 112)
+size = Vector2(148, 84)
 
 [node name="Boss" type="Area2D" groups=["enemy"]]
 z_index = 1

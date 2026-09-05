@@ -26,7 +26,7 @@ enum State { FALL, ENTER, FORMATION, WARN, DIVE }
 @export var formation_member := false
 @export var entry_speed := 560.0
 @export var dive_speed := 430.0
-@export var dive_pattern := "curved"   ## straight, curved, zigzag or fast
+@export var dive_pattern := "curved"   ## straight, curved, zigzag, fast or sweep
 @export var return_chance := 0.5
 @export var shoots := false
 @export var shoot_interval := 2.4
@@ -47,6 +47,9 @@ var _start_x := 0.0
 var _path: Array[Vector2] = []
 var _path_t := 0.0
 var _path_len := 1.0
+var _poly: PackedVector2Array = PackedVector2Array()
+var _seg := 0
+var _seg_t := 0.0
 var _warn_timer := 0.0
 var _shoot_timer := 0.0
 var _returns := false
@@ -58,6 +61,12 @@ func _ready() -> void:
 	_time = randf() * TAU
 	_prev_pos = position
 	_shoot_timer = randf_range(1.0, maxf(shoot_interval, 1.2))
+	if kind == "powerup":
+		$Sprite2D.scale = Vector2.ZERO
+		var tween := create_tween()
+		tween.tween_property($Sprite2D, "scale", Vector2.ONE, 0.28) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		Sfx.play("bonus", -18.0, 1.45)
 
 
 func _process(delta: float) -> void:
@@ -92,33 +101,51 @@ func _process_fall(delta: float) -> void:
 		position.x = _start_x + sin(_time * weave_speed) * weave_amplitude
 	if spin_speed != 0.0:
 		$Sprite2D.rotation += spin_speed * delta
+	if kind == "powerup":
+		var glow := 0.5 + 0.5 * sin(_time * 7.0)
+		$Sprite2D.modulate = Color.WHITE.lerp(Color(2.4, 2.1, 1.1), glow)
 	if position.y > get_viewport_rect().size.y + 140.0:
 		queue_free()
 
 
 # --- formation behaviour ---------------------------------------------------
 
-func begin_entry(path_points: Array) -> void:
-	var target: Vector2 = position
+func begin_entry(path_points: PackedVector2Array) -> void:
+	_poly = PackedVector2Array(path_points)
 	if is_instance_valid(formation):
-		target = formation.get_slot_base(slot_index)
-	_path = [path_points[0], path_points[1], path_points[2], target]
-	position = path_points[0]
+		_poly.append(formation.get_slot_base(slot_index))
+	position = _poly[0]
 	_prev_pos = position
-	_path_t = 0.0
-	_path_len = _measure_path()
+	_seg = 0
+	_seg_t = 0.0
 	state = State.ENTER
 
 
+# Walks the polyline at a constant speed, carrying leftover distance across
+# segment boundaries so the loop stays smooth however finely it is sampled.
 func _process_enter(delta: float) -> void:
-	_path_t += (entry_speed * speed_scale / _path_len) * delta
-	if _path_t >= 1.0:
-		_path_t = 1.0
-		_apply_path_position()
+	var step := entry_speed * speed_scale * delta
+	while step > 0.0 and _seg < _poly.size() - 1:
+		var length := _poly[_seg].distance_to(_poly[_seg + 1])
+		if length <= 0.001:
+			_seg += 1
+			_seg_t = 0.0
+			continue
+		var remaining := (1.0 - _seg_t) * length
+		if step < remaining:
+			_seg_t += step / length
+			step = 0.0
+		else:
+			step -= remaining
+			_seg += 1
+			_seg_t = 0.0
+
+	if _seg >= _poly.size() - 1:
+		_apply_point(_poly[_poly.size() - 1])
 		state = State.FORMATION
 		Sfx.play("enemy_formation", -20.0, randf_range(0.95, 1.12))
 		return
-	_apply_path_position()
+	_apply_point(_poly[_seg].lerp(_poly[_seg + 1], _seg_t))
 
 
 func _process_formation(delta: float) -> void:
@@ -174,6 +201,13 @@ func _launch_dive() -> void:
 		"fast":
 			c1 = start + Vector2(side * 60.0, 340.0)
 			c2 = end - Vector2(side * 60.0, 300.0)
+		"sweep":
+			# Crosses to the far side of the screen on the way down.
+			var far := clampf(screen.x * 0.5 + side * (screen.x * 0.5 - 60.0),
+				40.0, screen.x - 40.0)
+			end = Vector2(far, screen.y + 180.0)
+			c1 = start + Vector2(side * 300.0, 340.0)
+			c2 = Vector2(far - side * 120.0, screen.y * 0.72)
 		_:
 			c1 = start + Vector2(side * 330.0, 210.0)
 			c2 = end - Vector2(side * 300.0, 300.0)
@@ -203,11 +237,12 @@ func _finish_dive() -> void:
 		var screen := get_viewport_rect().size
 		var start := Vector2(clampf(position.x, 60.0, screen.x - 60.0), -140.0)
 		var target: Vector2 = formation.get_slot_base(slot_index)
-		_path = [start, start + Vector2(0.0, 220.0), target - Vector2(0.0, 240.0), target]
 		position = start
 		_prev_pos = start
-		_path_t = 0.0
-		_path_len = _measure_path()
+		_poly = sample_curve(start, start + Vector2(0.0, 220.0),
+			target - Vector2(0.0, 240.0), target, 14)
+		_seg = 0
+		_seg_t = 0.0
 		state = State.ENTER
 	else:
 		queue_free()
@@ -281,6 +316,14 @@ func collect() -> void:
 		return
 	destroyed = true
 	set_deferred("monitoring", false)
+	var boom = _explosion.instantiate()
+	boom.radius = 48.0
+	boom.duration = 0.34
+	boom.shards = 10
+	boom.pixel = 5.0
+	boom.color = Color(1.0, 0.86, 0.25)
+	get_parent().add_child(boom)
+	boom.global_position = global_position
 	queue_free()
 
 
@@ -299,6 +342,25 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 # --- path helpers ----------------------------------------------------------
+
+func _apply_point(point: Vector2) -> void:
+	var step := point - _prev_pos
+	position = point
+	if step.length() > 0.5:
+		rotation = lerp_angle(rotation, step.angle() - PI / 2.0, 0.35)
+	_prev_pos = point
+
+
+static func sample_curve(p0: Vector2, c1: Vector2, c2: Vector2, p3: Vector2,
+		steps: int) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in steps + 1:
+		var t := float(i) / float(steps)
+		var u := 1.0 - t
+		out.append(u * u * u * p0 + 3.0 * u * u * t * c1
+			+ 3.0 * u * t * t * c2 + t * t * t * p3)
+	return out
+
 
 func _apply_path_position(extra := Vector2.ZERO) -> void:
 	var point := _bezier(_path_t) + extra

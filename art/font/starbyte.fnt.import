@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://d0gitlj6an0on"
+path="res://.godot/imported/starbyte.fnt-2361a431e20898baf0bc91d356272a38.fontdata"
+
+[deps]
+
+source_file="res://art/font/starbyte.fnt"
+dest_files=["res://.godot/imported/starbyte.fnt-2361a431e20898baf0bc91d356272a38.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

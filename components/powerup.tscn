@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://art/powerup.svg" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_pu"]
-radius = 27.0
+radius = 18.0
 
 [node name="PowerUp" type="Area2D" groups=["powerUp"]]
 collision_layer = 1

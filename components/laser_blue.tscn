@@ -4,8 +4,8 @@
 [ext_resource type="Texture2D" path="res://art/laser_blue.svg" id="2_tex"]
 
 [sub_resource type="CapsuleShape2D" id="Caps_blue"]
-radius = 5.0
-height = 34.0
+radius = 3.5
+height = 24.0
 
 [node name="LaserBlue" type="Area2D" groups=["laser"]]
 z_index = 2

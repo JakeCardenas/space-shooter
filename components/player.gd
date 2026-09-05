@@ -60,8 +60,8 @@ func _move(delta: float) -> void:
 			global_position += to_target.normalized() * step
 
 	var screen := get_viewport_rect().size
-	global_position.x = clampf(global_position.x, 46.0, screen.x - 46.0)
-	global_position.y = clampf(global_position.y, 90.0, screen.y - 70.0)
+	global_position.x = clampf(global_position.x, 40.0, screen.x - 40.0)
+	global_position.y = clampf(global_position.y, 190.0, screen.y - 100.0)
 
 	var drift := global_position.x - _last_x
 	_last_x = global_position.x
@@ -115,7 +115,7 @@ func take_damage(amount: int) -> void:
 
 func die() -> void:
 	destroyed = true
-	Global.game_over = true
+	Global.end_run()
 	$ships.visible = false
 	$Trail.visible = false
 	$CollisionShape2D.set_deferred("disabled", true)
@@ -124,7 +124,7 @@ func die() -> void:
 	Global.shake(20.0)
 
 	var boom = _explosion.instantiate()
-	boom.radius = 130.0
+	boom.radius = 90.0
 	boom.duration = 0.8
 	boom.shards = 14
 	boom.color = Color(1.0, 0.45, 0.25)
@@ -154,6 +154,9 @@ func _on_area_entered(area: Area2D) -> void:
 		var tween := create_tween()
 		$ships.modulate = Color(2.0, 1.9, 1.2)
 		tween.tween_property($ships, "modulate", Color.WHITE, 0.3)
+		return
+
+	if _invincible:
 		return
 
 	if area.is_in_group("enemyLaser"):
