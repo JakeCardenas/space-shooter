@@ -73,9 +73,7 @@ func _process(delta: float) -> void:
 
 
 func _move(delta: float) -> void:
-	var keyboard_input := Vector2.ZERO
-	keyboard_input.x = Input.get_axis("move_left", "move_right")
-	keyboard_input.y = Input.get_axis("move_up", "move_down")
+	var horizontal_input := Input.get_axis("move_left", "move_right")
 	
 	var virtual_input := Vector2.ZERO
 	if is_instance_valid(_virtual_joystick):
@@ -83,22 +81,20 @@ func _move(delta: float) -> void:
 	
 	var mouse_input_active := Input.is_action_pressed("left_click")
 	
-	if keyboard_input.length() > 0.0:
-		keyboard_input = keyboard_input.normalized()
+	if horizontal_input != 0.0:
 		var step: float = speed * delta
-		global_position += keyboard_input * step
+		global_position.x += horizontal_input * step
 	elif virtual_input.length() > 0.0:
 		var step: float = speed * delta
-		global_position += virtual_input * step
+		global_position.x += virtual_input.x * step
 	elif mouse_input_active:
 		var to_target := get_global_mouse_position() - global_position
-		if to_target.length() > stopping_distance:
-			var step: float = min(speed * delta, to_target.length())
-			global_position += to_target.normalized() * step
+		if abs(to_target.x) > stopping_distance:
+			var step: float = min(speed * delta, abs(to_target.x))
+			global_position.x += sign(to_target.x) * step
 
 	var screen := get_viewport_rect().size
 	global_position.x = clampf(global_position.x, 40.0, screen.x - 40.0)
-	global_position.y = clampf(global_position.y, 190.0, screen.y - 100.0)
 
 	var drift := global_position.x - _last_x
 	_last_x = global_position.x
