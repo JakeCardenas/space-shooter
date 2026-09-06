@@ -41,6 +41,9 @@ const CURSOR_Y := {1: 424.0, 2: 476.0, 3: 528.0}
 	$CanvasLayer/inGameScreen/lives/life3,
 ]
 
+var _virtual_joystick: Control = null
+var _fire_button: Control = null
+
 var _floating_text := preload("res://scenes/floating_text.tscn")
 var _game_over_shown := false
 var _last_multiplier := 1
@@ -85,6 +88,8 @@ func _ready() -> void:
 	_update_mute_labels()
 	_flash_start_button()
 	Music.play("menu")
+	
+	call_deferred("_setup_mobile_controls")
 
 
 func _all_buttons() -> Array:
@@ -176,6 +181,13 @@ func _flash_start_button() -> void:
 	var tween := create_tween().set_loops()
 	tween.tween_property(button, "modulate:a", 0.25, 0.45)
 	tween.tween_property(button, "modulate:a", 1.0, 0.45)
+	
+	var help_label: Label = $CanvasLayer/startScreen/LabelHelp
+	var is_mobile := DisplayServer.is_touchscreen_available()
+	if is_mobile:
+		help_label.text = "USE VIRTUAL JOYSTICK AND FIRE BUTTON\n\nENTER STARTS     ARROWS PICK SHIP"
+	else:
+		help_label.text = "WASD OR ARROWS TO MOVE\nSPACEBAR OR HOLD MOUSE TO SHOOT\n\nENTER STARTS     ARROWS PICK SHIP"
 
 
 func _select_ship(index: int) -> void:
@@ -399,6 +411,7 @@ func _on_button_choose_pressed() -> void:
 	Global.game_on = true
 	_banner("START", Color(1.0, 0.3, 0.35), 0.5)
 	Music.play("gameplay")
+	_show_mobile_controls(true)
 
 
 func _on_button_mute_pressed() -> void:
@@ -410,3 +423,31 @@ func _on_button_mute_pressed() -> void:
 func _on_button_menu_pressed() -> void:
 	Global.reset_values()
 	get_tree().reload_current_scene()
+
+
+func _setup_mobile_controls() -> void:
+	var joystick_scene := preload("res://scenes/virtual_joystick.tscn")
+	var fire_button_scene := preload("res://scenes/fire_button.tscn")
+	
+	var is_mobile := OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	
+	if not is_mobile:
+		is_mobile = DisplayServer.is_touchscreen_available()
+	
+	if is_mobile:
+		_virtual_joystick = joystick_scene.instantiate()
+		_virtual_joystick.position = Vector2(40, 880)
+		_in_game_screen.add_child(_virtual_joystick)
+		_virtual_joystick.visible = false
+		
+		_fire_button = fire_button_scene.instantiate()
+		_fire_button.position = Vector2(660, 880)
+		_in_game_screen.add_child(_fire_button)
+		_fire_button.visible = false
+
+
+func _show_mobile_controls(show: bool) -> void:
+	if is_instance_valid(_virtual_joystick):
+		_virtual_joystick.visible = show
+	if is_instance_valid(_fire_button):
+		_fire_button.visible = show

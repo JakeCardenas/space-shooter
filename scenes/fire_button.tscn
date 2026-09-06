@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3 uid="uid://cw0gqj3qs7xud"]
+
+[ext_resource type="Script" path="res://scripts/fire_button.gd" id="1_5h2jn"]
+
+[node name="FireButton" type="Control" groups=["fire_button"]]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 140.0
+offset_bottom = 140.0
+script = ExtResource("1_5h2jn")
+
+[node name="Button" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.3, 0.35, 0.7)
+
+[node name="Label" type="Label" parent="Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "FIRE"
+horizontal_alignment = 1
+vertical_alignment = 1

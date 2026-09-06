@@ -25,12 +25,17 @@ var _invincible := false
 var _last_x := 0.0
 var _wing_home := Vector2(46.0, 6.0)
 
+var _virtual_joystick: Control = null
+var _fire_button: Control = null
+
 
 func _ready() -> void:
 	health = max_health
 	_last_x = global_position.x
 	visible = false
 	show_chosen_ship()
+	
+	call_deferred("_find_virtual_controls")
 
 
 func show_chosen_ship() -> void:
@@ -47,6 +52,11 @@ func show_chosen_ship() -> void:
 			$Trail.color = Color(0.78, 0.5, 1.0, 0.55)
 
 
+func _find_virtual_controls() -> void:
+	_virtual_joystick = get_tree().get_first_node_in_group("virtual_joystick")
+	_fire_button = get_tree().get_first_node_in_group("fire_button")
+
+
 func _process(delta: float) -> void:
 	visible = Global.game_on
 	if not Global.game_on or Global.game_over or destroyed:
@@ -54,12 +64,33 @@ func _process(delta: float) -> void:
 
 	_move(delta)
 
-	if Input.is_action_pressed("left_click") and can_shoot:
+	var shooting := Input.is_action_pressed("left_click") or Input.is_action_pressed("shoot")
+	if is_instance_valid(_fire_button) and _fire_button.is_pressed():
+		shooting = true
+	
+	if shooting and can_shoot:
 		shoot_laser()
 
 
 func _move(delta: float) -> void:
-	if Input.is_action_pressed("left_click"):
+	var keyboard_input := Vector2.ZERO
+	keyboard_input.x = Input.get_axis("move_left", "move_right")
+	keyboard_input.y = Input.get_axis("move_up", "move_down")
+	
+	var virtual_input := Vector2.ZERO
+	if is_instance_valid(_virtual_joystick):
+		virtual_input = _virtual_joystick.get_direction()
+	
+	var mouse_input_active := Input.is_action_pressed("left_click")
+	
+	if keyboard_input.length() > 0.0:
+		keyboard_input = keyboard_input.normalized()
+		var step: float = speed * delta
+		global_position += keyboard_input * step
+	elif virtual_input.length() > 0.0:
+		var step: float = speed * delta
+		global_position += virtual_input * step
+	elif mouse_input_active:
 		var to_target := get_global_mouse_position() - global_position
 		if to_target.length() > stopping_distance:
 			var step: float = min(speed * delta, to_target.length())
