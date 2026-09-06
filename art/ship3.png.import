@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c726wcx6a1lm4"
-path="res://.godot/imported/enemy_wasp.svg-9f0802ae1e241c63be20150000bdc092.ctex"
+uid="uid://cw4adk12s7eak"
+path="res://.godot/imported/ship3.png-d183afc71e26dae862aaa0da868621c0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/enemy_wasp.svg"
-dest_files=["res://.godot/imported/enemy_wasp.svg-9f0802ae1e241c63be20150000bdc092.ctex"]
+source_file="res://art/ship3.png"
+dest_files=["res://.godot/imported/ship3.png-d183afc71e26dae862aaa0da868621c0.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

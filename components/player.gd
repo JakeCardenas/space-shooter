@@ -42,7 +42,7 @@ func show_chosen_ship() -> void:
 	$ships/ship1.visible = Global.chosen_ship == 1
 	$ships/ship2.visible = Global.chosen_ship == 2
 	$ships/ship3.visible = Global.chosen_ship == 3
-	$ships/Wingman.texture = load("res://art/ship%d.svg" % Global.chosen_ship)
+	$ships/Wingman.texture = load("res://art/ship%d.png" % Global.chosen_ship)
 	match Global.chosen_ship:
 		1:
 			$Trail.color = Color(0.45, 0.78, 1.0, 0.55)

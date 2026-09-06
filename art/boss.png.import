@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://da2gc5nt7tq30"
-path="res://.godot/imported/ship2.svg-39031c683aa2a0cc43014e2bcd4711f5.ctex"
+uid="uid://ik2r1fchfstx"
+path="res://.godot/imported/boss.png-bb50fa5c7e53b490e74798057ce7ed59.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/ship2.svg"
-dest_files=["res://.godot/imported/ship2.svg-39031c683aa2a0cc43014e2bcd4711f5.ctex"]
+source_file="res://art/boss.png"
+dest_files=["res://.godot/imported/boss.png-bb50fa5c7e53b490e74798057ce7ed59.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://uvykpr4dxbie"
-path="res://.godot/imported/ship3.svg-b90dd3373a31029835459f89e8cb442e.ctex"
+uid="uid://3nkvqkfhuv8c"
+path="res://.godot/imported/planet_earth.png-fc3f92a70257413177426ad7323a45fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/ship3.svg"
-dest_files=["res://.godot/imported/ship3.svg-b90dd3373a31029835459f89e8cb442e.ctex"]
+source_file="res://art/planet_earth.png"
+dest_files=["res://.godot/imported/planet_earth.png-fc3f92a70257413177426ad7323a45fd.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

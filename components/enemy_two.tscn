@@ -1,10 +1,10 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://components/enemy.gd" id="1_en"]
-[ext_resource type="Texture2D" path="res://art/enemy_two.svg" id="2_tex"]
+[ext_resource type="Texture2D" path="res://art/enemy_two.png" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="Circ_e2"]
-radius = 20.0
+radius = 22.0
 
 [node name="EnemyTwo" type="Area2D" groups=["enemy"]]
 collision_layer = 1

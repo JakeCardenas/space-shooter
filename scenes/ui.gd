@@ -12,9 +12,9 @@ const SHIP_BLURBS := {
 	3: "PIERCING PLASMA ORB\nSLOW BUT HEAVY",
 }
 const SHIP_TEXTURES := {
-	1: preload("res://art/ship1.svg"),
-	2: preload("res://art/ship2.svg"),
-	3: preload("res://art/ship3.svg"),
+	1: preload("res://art/ship1.png"),
+	2: preload("res://art/ship2.png"),
+	3: preload("res://art/ship3.png"),
 }
 const CURSOR_Y := {1: 424.0, 2: 476.0, 3: 528.0}
 
@@ -149,6 +149,7 @@ func _process(delta: float) -> void:
 	_touch_controls.visible = _has_touch and not Global.game_over
 	$CanvasLayer/inGameScreen/LabelScore.text = str(Global.score)
 	$CanvasLayer/inGameScreen/LabelHigh.text = str(Global.high_score)
+	$CanvasLayer/inGameScreen/LabelStage.text = "STAGE %d" % maxi(Global.wave, 1)
 	_blink += delta
 	$CanvasLayer/inGameScreen/Label1Up.modulate.a = 1.0 if fposmod(_blink, 1.0) < 0.6 else 0.0
 	for i in _lives.size():

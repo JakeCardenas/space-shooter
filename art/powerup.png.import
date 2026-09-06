@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddn7v2d6rgec2"
-path="res://.godot/imported/enemy_special.svg-fb3d8520fb18ed43e411a40caf29e724.ctex"
+uid="uid://bd6cfmfbfk00"
+path="res://.godot/imported/powerup.png-8d7503cfe33a1703f5214bc923a52b3f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/enemy_special.svg"
-dest_files=["res://.godot/imported/enemy_special.svg-fb3d8520fb18ed43e411a40caf29e724.ctex"]
+source_file="res://art/powerup.png"
+dest_files=["res://.godot/imported/powerup.png-8d7503cfe33a1703f5214bc923a52b3f.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

@@ -401,7 +401,7 @@ func _show_captive() -> void:
 	if is_instance_valid(_captive_sprite):
 		return
 	_captive_sprite = Sprite2D.new()
-	_captive_sprite.texture = load("res://art/ship%d.svg" % Global.chosen_ship)
+	_captive_sprite.texture = load("res://art/ship%d.png" % Global.chosen_ship)
 	_captive_sprite.position = Vector2(0.0, 40.0)
 	_captive_sprite.scale = Vector2(0.7, 0.7)
 	_captive_sprite.rotation = PI

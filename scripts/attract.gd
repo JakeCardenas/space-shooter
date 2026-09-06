@@ -8,10 +8,10 @@ extends Node2D
 @export var squad_gap := 3.4
 
 var _textures := [
-	preload("res://art/enemy_one.svg"),
-	preload("res://art/enemy_fast.svg"),
-	preload("res://art/enemy_two.svg"),
-	preload("res://art/enemy_special.svg"),
+	preload("res://art/enemy_one.png"),
+	preload("res://art/enemy_fast.png"),
+	preload("res://art/enemy_two.png"),
+	preload("res://art/enemy_special.png"),
 ]
 
 var _idle := 0.0

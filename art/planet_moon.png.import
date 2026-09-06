@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://l704ov0rols7"
-path="res://.godot/imported/enemy_one.svg-ab32d3c5cb76a58f037d2860173b3f48.ctex"
+uid="uid://gqbhjdssv5mq"
+path="res://.godot/imported/planet_moon.png-36be6d79353c2376ca429e07aec30883.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/enemy_one.svg"
-dest_files=["res://.godot/imported/enemy_one.svg-ab32d3c5cb76a58f037d2860173b3f48.ctex"]
+source_file="res://art/planet_moon.png"
+dest_files=["res://.godot/imported/planet_moon.png-36be6d79353c2376ca429e07aec30883.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

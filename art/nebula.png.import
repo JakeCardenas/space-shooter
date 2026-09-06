@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cy5frlnbwfd3t"
-path="res://.godot/imported/enemy_fast.svg-bba5475c6a55b5684a228f79f8762ba8.ctex"
+uid="uid://bllt6laevab7g"
+path="res://.godot/imported/nebula.png-1319b913345c8a521a1d231f3e328797.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/enemy_fast.svg"
-dest_files=["res://.godot/imported/enemy_fast.svg-bba5475c6a55b5684a228f79f8762ba8.ctex"]
+source_file="res://art/nebula.png"
+dest_files=["res://.godot/imported/nebula.png-1319b913345c8a521a1d231f3e328797.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
