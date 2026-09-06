@@ -142,12 +142,20 @@ const engine = new Engine(GODOT_CONFIG);
 			.map(function (line) { return pixelText(line, '#ff4d59'); }).join('');
 	}
 
+	function focusCanvas() {
+		const c = document.getElementById('canvas');
+		if (c) { c.focus(); }
+	}
+
 	function hideBoot() {
 		if (!initializing) { return; }
 		initializing = false;
 		boot.classList.add('done');
-		setTimeout(function () { boot.remove(); }, 500);
+		setTimeout(function () { boot.remove(); focusCanvas(); }, 500);
 	}
+
+	// clicking anywhere hands the keyboard back to the game
+	window.addEventListener('pointerdown', focusCanvas);
 
 	function displayFailureNotice(err) {
 		console.error(err);

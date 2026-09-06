@@ -3,7 +3,7 @@ extends Area2D
 # The player ship. Hold the left mouse button (or touch) to fly toward the
 # cursor and fire at the same time.
 
-@export var speed := 950.0
+@export var speed := 450.0
 @export var stopping_distance := 6.0
 @export var max_health := 3
 
