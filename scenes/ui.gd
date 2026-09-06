@@ -23,6 +23,7 @@ const CURSOR_Y := {1: 424.0, 2: 476.0, 3: 528.0}
 @onready var _start_screen: Control = $CanvasLayer/startScreen
 @onready var _in_game_screen: Control = $CanvasLayer/inGameScreen
 @onready var _game_over_screen: Control = $CanvasLayer/gameOverScreen
+@onready var _touch_controls: CanvasLayer = $TouchControls
 @onready var _initials_screen: Control = $CanvasLayer/initialsScreen
 @onready var _initial_slots: Array[Label] = [
 	$CanvasLayer/initialsScreen/slots/slot0,
@@ -52,9 +53,11 @@ var _bonus_queue: Array[String] = []
 var _menu_time := 0.0
 var _banner_tween: Tween = null
 var _blink := 0.0
+var _has_touch := false
 
 
 func _ready() -> void:
+	_has_touch = DisplayServer.is_touchscreen_available()
 	Global.reset_values()
 	Global.set_mute(Global.mute)
 
@@ -62,6 +65,7 @@ func _ready() -> void:
 	_in_game_screen.visible = false
 	_game_over_screen.visible = false
 	_initials_screen.visible = false
+	_touch_controls.visible = false
 	_wave_label.visible = false
 	_bonus_label.visible = false
 	_boss_bar.visible = false
@@ -142,6 +146,7 @@ func _process(delta: float) -> void:
 	if not Global.game_on:
 		return
 
+	_touch_controls.visible = _has_touch and not Global.game_over
 	$CanvasLayer/inGameScreen/LabelScore.text = str(Global.score)
 	$CanvasLayer/inGameScreen/LabelHigh.text = str(Global.high_score)
 	_blink += delta
@@ -417,7 +422,7 @@ func _on_button_choose_pressed() -> void:
 func _on_button_mute_pressed() -> void:
 	Global.set_mute(not Global.mute)
 	_update_mute_labels()
-	Sfx.play("click")
+	Sfx.play("click", -14.0)
 
 
 func _on_button_menu_pressed() -> void:

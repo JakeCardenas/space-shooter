@@ -11,7 +11,7 @@ extends Node
 
 const TRACKS := ["menu", "gameplay", "challenge", "boss", "game_over", "high_score"]
 const EXTENSIONS := [".ogg", ".mp3", ".wav"]
-const VOLUME_DB := -8.0
+const VOLUME_DB := 0.0
 const FADE_TIME := 0.6
 
 var _player: AudioStreamPlayer
@@ -23,7 +23,7 @@ var _pending := ""
 
 func _ready() -> void:
 	_player = AudioStreamPlayer.new()
-	_player.bus = "Master"
+	_player.bus = "Music"
 	_player.volume_db = VOLUME_DB
 	add_child(_player)
 	_player.finished.connect(_on_finished)

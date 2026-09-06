@@ -26,7 +26,7 @@ func _gui_input(event: InputEvent) -> void:
 	
 	elif event is InputEventScreenDrag:
 		if event.index == _touch_index:
-			var local_pos := event.position
+			var local_pos: Vector2 = event.position
 			var is_inside := Rect2(Vector2.ZERO, size).has_point(local_pos)
 			_set_pressed(is_inside)
 

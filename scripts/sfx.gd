@@ -35,6 +35,7 @@ var _players: Array[AudioStreamPlayer] = []
 func _ready() -> void:
 	for i in POOL_SIZE:
 		var player := AudioStreamPlayer.new()
+		player.bus = "SFX"
 		add_child(player)
 		_players.append(player)
 
