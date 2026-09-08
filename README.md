@@ -121,24 +121,28 @@ Three ships to pick from:
 | TANK | Triple spread shot | 0.50s |
 | ZAP  | Piercing plasma orb (3 damage, passes through) | 0.80s |
 
-## The lane grid
+## The column grid
 
-The playfield is built on one invisible column grid, defined once in
-`Global.COLUMN_WIDTH` (78px, the formation's column pitch) and
-`Global.LANE_WIDTH` (39px, half of it). Formation rows with an even number of
-enemies sit half a column off centre, so the player's lanes are half-width to
-reach either family of columns — 19 lanes across the 840px playfield.
+Galaga's playfield is one grid, and everything lives on it. `Global` owns it:
+`COLUMN_WIDTH` (78px), `FORMATION_COLUMNS` (4 either side of the middle) and
+`PLAYER_COLUMNS` (5, giving the ship one column of run-off past the block).
 
-- `spawner.gd::_add()` rounds every formation slot onto the grid, so whichever
-  shape a wave takes, each enemy sits on a lane.
-- `spawner.gd::get_slot_position()` keeps the block breathing vertically but
-  makes the side-to-side sway shuffle a whole lane at a time, so the formation
-  never drifts off the grid mid-wave.
-- `player.gd` moves the ship by lane index, never by pixels, and glides to the
-  new lane in `lane_glide_time` seconds.
+- **Row widths are always odd** (7 early, 9 from stage 3), so every row is
+  centred on the middle column instead of sitting half a column off. That was
+  the old bug: with even rows the ship had positions in the gaps between
+  enemies, and lining a shot up meant guessing.
+- Every shape — block, vee, arrow, wave, staggered, diamond, arc — places its
+  enemies on whole columns, and `_add()` rounds to a column as a backstop.
+- **The block never drifts sideways.** Enemies chase their slot with an
+  exponential follow, so any horizontal movement leaves them lagging between
+  columns. It breathes vertically instead.
+- The ship moves by column index, never by pixels, easing into each step over
+  `column_glide_time`.
+- Enemies fire straight down the column they are standing in, so a shot is a
+  threat to exactly one column: the one you are in.
 
-The result is that the ship can always be lined up exactly under an enemy, with
-no half-column gap.
+The result is that the ship is always dead centre under a target, and every
+enemy is always somewhere the ship can stand.
 
 ## Presentation
 

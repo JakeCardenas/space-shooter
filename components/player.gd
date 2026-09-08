@@ -5,11 +5,10 @@ extends Area2D
 
 @export var max_health := 3
 # The ship rides the same column grid the formations sit on. One press moves it
-# exactly one lane - holding the key does nothing until it is pressed again -
-# and it always comes to rest dead centre in a lane.
-@export var lane_glide_time := 0.085
-
-const LANE_MARGIN := 40.0
+# exactly one column - holding the key does nothing until it is pressed again -
+# and it always comes to rest dead centre on a column, lined up under whatever
+# is sitting there. The move eases out so a single press reads as a snap.
+@export var column_glide_time := 0.11
 
 var health := 3
 var destroyed := false
@@ -27,9 +26,10 @@ var shielded := false
 
 var _invincible := false
 var _last_x := 0.0
-var _lane := 0
+var _column := 0
 var _stick_armed := true
-var _max_lane := 9
+var _glide_from := 0.0
+var _glide_t := 1.0
 var _wing_home := Vector2(46.0, 6.0)
 
 var _virtual_joystick: Control = null
@@ -83,14 +83,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not Global.game_on or Global.game_over or destroyed:
 		return
 	if event.is_action_pressed("move_left"):
-		_step_lane(-1)
+		_set_column(_column - 1)
 	elif event.is_action_pressed("move_right"):
-		_step_lane(1)
+		_set_column(_column + 1)
 
 
 func _move(delta: float) -> void:
-	_refresh_lane_limit()
-
 	# The joystick has no press to listen for, so it steps once per push and has
 	# to come back to centre before it will step again.
 	if is_instance_valid(_virtual_joystick):
@@ -99,12 +97,16 @@ func _move(delta: float) -> void:
 			_stick_armed = true
 		elif _stick_armed:
 			_stick_armed = false
-			_step_lane(signi(stick.x))
+			_set_column(_column + signi(stick.x))
 	elif Input.is_action_pressed("left_click"):
-		_lane = _lane_for(get_global_mouse_position().x)
+		_set_column(_column_at(get_global_mouse_position().x))
 
-	var glide := Global.LANE_WIDTH / lane_glide_time
-	global_position.x = move_toward(global_position.x, lane_x(_lane), glide * delta)
+	var target := column_x(_column)
+	if _glide_t < 1.0:
+		_glide_t = minf(_glide_t + delta / maxf(column_glide_time, 0.01), 1.0)
+		global_position.x = lerpf(_glide_from, target, 1.0 - pow(1.0 - _glide_t, 3.0))
+	else:
+		global_position.x = target
 
 	var drift := global_position.x - _last_x
 	_last_x = global_position.x
@@ -112,21 +114,21 @@ func _move(delta: float) -> void:
 	$ships.rotation = lerpf($ships.rotation, target_tilt, 10.0 * delta)
 
 
-func _step_lane(direction: int) -> void:
-	_lane = clampi(_lane + direction, -_max_lane, _max_lane)
+func _set_column(column: int) -> void:
+	column = clampi(column, -Global.PLAYER_COLUMNS, Global.PLAYER_COLUMNS)
+	if column == _column:
+		return
+	_column = column
+	_glide_from = global_position.x
+	_glide_t = 0.0
 
 
-func lane_x(lane: int) -> float:
-	return get_viewport_rect().size.x * 0.5 + lane * Global.LANE_WIDTH
+func column_x(column: int) -> float:
+	return get_viewport_rect().size.x * 0.5 + column * Global.COLUMN_WIDTH
 
 
-func _lane_for(x: float) -> int:
-	var centre := get_viewport_rect().size.x * 0.5
-	return clampi(roundi((x - centre) / Global.LANE_WIDTH), -_max_lane, _max_lane)
-
-
-func _refresh_lane_limit() -> void:
-	_max_lane = floori((get_viewport_rect().size.x * 0.5 - LANE_MARGIN) / Global.LANE_WIDTH)
+func _column_at(x: float) -> int:
+	return roundi((x - get_viewport_rect().size.x * 0.5) / Global.COLUMN_WIDTH)
 
 
 func shoot_laser() -> void:

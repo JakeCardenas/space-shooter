@@ -13,11 +13,13 @@ const LEADERBOARD_SIZE := 10
 const INITIAL_CHARSET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const COMBO_WINDOW := 2.2
 
-# The invisible grid the whole playfield lines up on. Enemy formations step in
-# COLUMN_WIDTH from the centre, and a row with an even count sits half a column
-# off, so the player's lanes are half-width to reach every column either way.
+# One grid for the whole playfield. Every enemy sits on a column and the ship
+# steps between those same columns, so it is always dead centre under a target
+# and never in the gap between two. Formations reach FORMATION_COLUMNS either
+# side of the middle; the ship gets one more column of run-off past that.
 const COLUMN_WIDTH := 78.0
-const LANE_WIDTH := COLUMN_WIDTH * 0.5
+const FORMATION_COLUMNS := 4
+const PLAYER_COLUMNS := 5
 
 # Mixing offsets baked into the bus layout. A slider at 1.0 keeps the intended
 # balance; anything lower attenuates from there.

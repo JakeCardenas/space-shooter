@@ -427,7 +427,8 @@ func _fire() -> void:
 	if not is_instance_valid(player) or not player.visible:
 		return
 	var bullet = _bullet.instantiate()
-	bullet.direction = (player.global_position - global_position).normalized()
+	# Straight down the column it is standing in, never angled across the grid.
+	bullet.direction = Vector2.DOWN
 	get_parent().add_child(bullet)
 	bullet.global_position = global_position + Vector2(0.0, 26.0)
 	Sfx.play_varied("enemy_shoot", -16.0, 0.12)

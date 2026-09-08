@@ -269,7 +269,8 @@ func _build_layout(wave: int) -> void:
 	_slots.clear()
 	_tiers.clear()
 	var cx := get_viewport_rect().size.x * 0.5
-	var wide := clampi(8 + wave / 4, 8, 10)
+	# Odd widths only, so every row is centred on the middle column.
+	var wide := 7 if wave <= 2 else 9
 
 	match _shape_for(wave):
 		"vee":
@@ -296,18 +297,18 @@ func _shape_for(wave: int) -> String:
 
 
 func _add(x: float, y: float, tier: int) -> void:
-	# Every slot lands on the shared lane grid, so whatever shape the wave takes
-	# the player can always sit dead centre under a column.
+	# Every slot lands on a column, so whatever shape the wave takes the ship can
+	# always sit dead centre under one of them.
 	var centre := get_viewport_rect().size.x * 0.5
-	var lane := roundf((x - centre) / Global.LANE_WIDTH)
-	_slots.append(Vector2(centre + lane * Global.LANE_WIDTH, y))
+	var column := roundf((x - centre) / Global.COLUMN_WIDTH)
+	_slots.append(Vector2(centre + column * Global.COLUMN_WIDTH, y))
 	_tiers.append(tier)
 
 
 func _row_plan(wide: int, wave: int) -> Array:
 	var plan := [
-		[maxi(2, wide - 4), 2],
-		[maxi(4, wide - 2), 1],
+		[maxi(3, wide - 4), 2],
+		[maxi(3, wide - 2), 1],
 		[wide, 0],
 		[wide, 0],
 	]
@@ -321,7 +322,12 @@ func _shape_rows(cx: float, wide: int, undulate: bool, stagger: bool) -> void:
 	for row in plan.size():
 		var count: int = plan[row][0]
 		var tier: int = plan[row][1]
-		var shift := Global.COLUMN_WIDTH * 0.5 if stagger and row % 2 == 1 else 0.0
+		var shift := 0.0
+		if stagger and row % 2 == 1:
+			# Offset rows step a whole column across and give up their outermost
+			# pair, so the block stays inside its own columns.
+			shift = Global.COLUMN_WIDTH
+			count = maxi(3, count - 2)
 		for c in count:
 			var x := cx + (c - (count - 1) * 0.5) * Global.COLUMN_WIDTH + shift
 			var y := FORMATION_TOP + row * ROW_SPACING
@@ -330,14 +336,15 @@ func _shape_rows(cx: float, wide: int, undulate: bool, stagger: bool) -> void:
 			_add(x, y, tier)
 
 
-func _shape_vee(cx: float, arm: int) -> void:
+func _shape_vee(cx: float, wide: int) -> void:
+	var arm := (wide - 1) / 2
 	_add(cx, FORMATION_TOP, 2)
 	for i in range(1, arm + 1):
-		var dx := i * Global.COLUMN_WIDTH * 0.62
-		var dy := i * ROW_SPACING * 0.55
 		var tier := 2 if i <= 1 else (1 if i <= 3 else 0)
-		_add(cx - dx, FORMATION_TOP + dy, tier)
-		_add(cx + dx, FORMATION_TOP + dy, tier)
+		for depth in 2:
+			var dy := (i + depth) * ROW_SPACING * 0.55
+			_add(cx - i * Global.COLUMN_WIDTH, FORMATION_TOP + dy, tier)
+			_add(cx + i * Global.COLUMN_WIDTH, FORMATION_TOP + dy, tier)
 
 
 func _shape_arrow(cx: float, arm: int) -> void:
@@ -347,29 +354,25 @@ func _shape_arrow(cx: float, arm: int) -> void:
 
 
 func _shape_diamond(cx: float, wide: int) -> void:
-	var half := maxi(2, wide / 2)
+	var half := (wide - 1) / 2
 	for row in range(-half, half + 1):
-		var count := half + 1 - absi(row)
-		if count <= 0:
-			continue
+		var span := half - absi(row)
 		var tier := 2 if absi(row) <= 1 else (1 if absi(row) <= 2 else 0)
-		for c in count:
-			_add(cx + (c - (count - 1) * 0.5) * Global.COLUMN_WIDTH,
+		for c in range(-span, span + 1):
+			_add(cx + c * Global.COLUMN_WIDTH,
 				FORMATION_TOP + (row + half) * ROW_SPACING * 0.62, tier)
 
 
 func _shape_arc(cx: float, wide: int) -> void:
-	var radius := 330.0
 	for row in 3:
-		var count := wide - row * 2
-		if count <= 1:
+		var span := (wide - 1) / 2 - row
+		if span < 1:
 			continue
 		var tier := 2 if row == 0 else (1 if row == 1 else 0)
-		for c in count:
-			var a := lerpf(-0.82, 0.82, float(c) / maxf(1.0, count - 1.0))
-			_add(cx + sin(a) * (radius - row * 34.0),
-				FORMATION_TOP + (1.0 - cos(a)) * radius * 0.55 + row * ROW_SPACING * 0.85,
-				tier)
+		for c in range(-span, span + 1):
+			var lift := pow(float(absi(c)) / float(span), 2.0) * 96.0
+			_add(cx + c * Global.COLUMN_WIDTH,
+				FORMATION_TOP + row * ROW_SPACING * 0.85 + lift, tier)
 
 
 func _pick_types(wave: int) -> Array:
@@ -427,9 +430,11 @@ func get_slot_position(index: int) -> Vector2:
 	var centre := Vector2(get_viewport_rect().size.x * 0.5, FORMATION_TOP)
 	# The block breathes vertically and shuffles a whole lane at a time sideways,
 	# so every enemy stays on the same grid the player moves along.
+	# The block only ever breathes vertically. Enemies chase their slot with an
+	# exponential follow, so any sideways drift would leave them lagging between
+	# columns - and a column the ship cannot line up with is the whole problem.
 	var pulse := 1.0 + sin(_sway * 0.55) * 0.045
-	var shuffle := roundf(sin(_sway) * 26.0 / Global.LANE_WIDTH) * Global.LANE_WIDTH
-	return Vector2(base.x + shuffle,
+	return Vector2(base.x,
 		centre.y + (base.y - centre.y) * pulse + sin(_sway * 0.65) * 8.0)
 
 
