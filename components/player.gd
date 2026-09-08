@@ -1,11 +1,15 @@
 extends Area2D
 
-# The player ship. Hold the left mouse button (or touch) to fly toward the
-# cursor and fire at the same time.
+# The player ship. It only moves left and right, and only between the columns
+# of the formation grid — one lane per tap, repeating while held.
 
-@export var speed := 450.0
-@export var stopping_distance := 6.0
 @export var max_health := 3
+# The ship rides the same column grid the formations sit on. One press moves it
+# exactly one lane - holding the key does nothing until it is pressed again -
+# and it always comes to rest dead centre in a lane.
+@export var lane_glide_time := 0.085
+
+const LANE_MARGIN := 40.0
 
 var health := 3
 var destroyed := false
@@ -23,6 +27,9 @@ var shielded := false
 
 var _invincible := false
 var _last_x := 0.0
+var _lane := 0
+var _stick_armed := true
+var _max_lane := 9
 var _wing_home := Vector2(46.0, 6.0)
 
 var _virtual_joystick: Control = null
@@ -72,34 +79,54 @@ func _process(delta: float) -> void:
 		shoot_laser()
 
 
-func _move(delta: float) -> void:
-	var horizontal_input := Input.get_axis("move_left", "move_right")
-	
-	var virtual_input := Vector2.ZERO
-	if is_instance_valid(_virtual_joystick):
-		virtual_input = _virtual_joystick.get_direction()
-	
-	var mouse_input_active := Input.is_action_pressed("left_click")
-	
-	if horizontal_input != 0.0:
-		var step: float = speed * delta
-		global_position.x += horizontal_input * step
-	elif virtual_input.length() > 0.0:
-		var step: float = speed * delta
-		global_position.x += virtual_input.x * step
-	elif mouse_input_active:
-		var to_target := get_global_mouse_position() - global_position
-		if abs(to_target.x) > stopping_distance:
-			var step: float = min(speed * delta, abs(to_target.x))
-			global_position.x += sign(to_target.x) * step
+func _unhandled_input(event: InputEvent) -> void:
+	if not Global.game_on or Global.game_over or destroyed:
+		return
+	if event.is_action_pressed("move_left"):
+		_step_lane(-1)
+	elif event.is_action_pressed("move_right"):
+		_step_lane(1)
 
-	var screen := get_viewport_rect().size
-	global_position.x = clampf(global_position.x, 40.0, screen.x - 40.0)
+
+func _move(delta: float) -> void:
+	_refresh_lane_limit()
+
+	# The joystick has no press to listen for, so it steps once per push and has
+	# to come back to centre before it will step again.
+	if is_instance_valid(_virtual_joystick):
+		var stick: Vector2 = _virtual_joystick.get_direction()
+		if absf(stick.x) < 0.25:
+			_stick_armed = true
+		elif _stick_armed:
+			_stick_armed = false
+			_step_lane(signi(stick.x))
+	elif Input.is_action_pressed("left_click"):
+		_lane = _lane_for(get_global_mouse_position().x)
+
+	var glide := Global.LANE_WIDTH / lane_glide_time
+	global_position.x = move_toward(global_position.x, lane_x(_lane), glide * delta)
 
 	var drift := global_position.x - _last_x
 	_last_x = global_position.x
 	var target_tilt := clampf(drift * 0.03, -0.32, 0.32)
 	$ships.rotation = lerpf($ships.rotation, target_tilt, 10.0 * delta)
+
+
+func _step_lane(direction: int) -> void:
+	_lane = clampi(_lane + direction, -_max_lane, _max_lane)
+
+
+func lane_x(lane: int) -> float:
+	return get_viewport_rect().size.x * 0.5 + lane * Global.LANE_WIDTH
+
+
+func _lane_for(x: float) -> int:
+	var centre := get_viewport_rect().size.x * 0.5
+	return clampi(roundi((x - centre) / Global.LANE_WIDTH), -_max_lane, _max_lane)
+
+
+func _refresh_lane_limit() -> void:
+	_max_lane = floori((get_viewport_rect().size.x * 0.5 - LANE_MARGIN) / Global.LANE_WIDTH)
 
 
 func shoot_laser() -> void:

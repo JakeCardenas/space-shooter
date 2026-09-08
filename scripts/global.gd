@@ -13,6 +13,12 @@ const LEADERBOARD_SIZE := 10
 const INITIAL_CHARSET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const COMBO_WINDOW := 2.2
 
+# The invisible grid the whole playfield lines up on. Enemy formations step in
+# COLUMN_WIDTH from the centre, and a row with an even count sits half a column
+# off, so the player's lanes are half-width to reach every column either way.
+const COLUMN_WIDTH := 78.0
+const LANE_WIDTH := COLUMN_WIDTH * 0.5
+
 # Mixing offsets baked into the bus layout. A slider at 1.0 keeps the intended
 # balance; anything lower attenuates from there.
 const BUS_BASE_DB := {"Master": 0.0, "Music": -12.0, "SFX": -10.0}

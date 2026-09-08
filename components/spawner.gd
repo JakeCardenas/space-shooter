@@ -13,7 +13,6 @@ signal challenge_started(wave: int)
 signal challenge_finished(hits: int, total: int, perfect: bool)
 
 const FORMATION_TOP := 200.0
-const COL_SPACING := 78.0
 const ROW_SPACING := 60.0
 const BOSS_EVERY := 5
 const SQUAD_SIZE := 6
@@ -297,7 +296,11 @@ func _shape_for(wave: int) -> String:
 
 
 func _add(x: float, y: float, tier: int) -> void:
-	_slots.append(Vector2(x, y))
+	# Every slot lands on the shared lane grid, so whatever shape the wave takes
+	# the player can always sit dead centre under a column.
+	var centre := get_viewport_rect().size.x * 0.5
+	var lane := roundf((x - centre) / Global.LANE_WIDTH)
+	_slots.append(Vector2(centre + lane * Global.LANE_WIDTH, y))
 	_tiers.append(tier)
 
 
@@ -318,9 +321,9 @@ func _shape_rows(cx: float, wide: int, undulate: bool, stagger: bool) -> void:
 	for row in plan.size():
 		var count: int = plan[row][0]
 		var tier: int = plan[row][1]
-		var shift := COL_SPACING * 0.5 if stagger and row % 2 == 1 else 0.0
+		var shift := Global.COLUMN_WIDTH * 0.5 if stagger and row % 2 == 1 else 0.0
 		for c in count:
-			var x := cx + (c - (count - 1) * 0.5) * COL_SPACING + shift
+			var x := cx + (c - (count - 1) * 0.5) * Global.COLUMN_WIDTH + shift
 			var y := FORMATION_TOP + row * ROW_SPACING
 			if undulate:
 				y += sin(float(c) / maxf(1.0, count - 1.0) * PI * 2.0) * 22.0
@@ -330,7 +333,7 @@ func _shape_rows(cx: float, wide: int, undulate: bool, stagger: bool) -> void:
 func _shape_vee(cx: float, arm: int) -> void:
 	_add(cx, FORMATION_TOP, 2)
 	for i in range(1, arm + 1):
-		var dx := i * COL_SPACING * 0.62
+		var dx := i * Global.COLUMN_WIDTH * 0.62
 		var dy := i * ROW_SPACING * 0.55
 		var tier := 2 if i <= 1 else (1 if i <= 3 else 0)
 		_add(cx - dx, FORMATION_TOP + dy, tier)
@@ -351,7 +354,7 @@ func _shape_diamond(cx: float, wide: int) -> void:
 			continue
 		var tier := 2 if absi(row) <= 1 else (1 if absi(row) <= 2 else 0)
 		for c in count:
-			_add(cx + (c - (count - 1) * 0.5) * COL_SPACING,
+			_add(cx + (c - (count - 1) * 0.5) * Global.COLUMN_WIDTH,
 				FORMATION_TOP + (row + half) * ROW_SPACING * 0.62, tier)
 
 
@@ -422,10 +425,12 @@ func get_slot_base(index: int) -> Vector2:
 func get_slot_position(index: int) -> Vector2:
 	var base := get_slot_base(index)
 	var centre := Vector2(get_viewport_rect().size.x * 0.5, FORMATION_TOP)
-	# a slow pulse outward from the centre on top of the side-to-side sway
+	# The block breathes vertically and shuffles a whole lane at a time sideways,
+	# so every enemy stays on the same grid the player moves along.
 	var pulse := 1.0 + sin(_sway * 0.55) * 0.045
-	return centre + (base - centre) * pulse \
-		+ Vector2(sin(_sway) * 26.0, sin(_sway * 0.65) * 8.0)
+	var shuffle := roundf(sin(_sway) * 26.0 / Global.LANE_WIDTH) * Global.LANE_WIDTH
+	return Vector2(base.x + shuffle,
+		centre.y + (base.y - centre.y) * pulse + sin(_sway * 0.65) * 8.0)
 
 
 # --- dives and ambient hazards ---------------------------------------------
@@ -562,7 +567,7 @@ func _attack_escort(ready: Array) -> void:
 
 	var guards := []
 	for enemy in _by_x(ready):
-		if enemy != elite and absf(enemy.position.x - elite.position.x) < COL_SPACING * 2.5:
+		if enemy != elite and absf(enemy.position.x - elite.position.x) < Global.COLUMN_WIDTH * 2.5:
 			guards.append(enemy)
 		if guards.size() >= 2:
 			break

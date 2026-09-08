@@ -89,7 +89,8 @@ uncached so new deploys appear immediately.
 
 Open the project in Godot and press **F5** (or the Play button).
 
-- **←/→** or **A/D** slide the ship left and right — it never leaves the bottom row.
+- **←/→** or **A/D** step the ship one lane left or right — one press, one lane,
+  no repeat while held. It never leaves the bottom row.
 - **SPACE** fires. Holding the left mouse button also flies and fires, for anyone who prefers it.
 - **ESC** pauses. On touch devices the virtual joystick and FIRE button appear instead.
 - **↑/↓** move the menu cursor, **ENTER** confirms, **ESC** backs out of a menu.
@@ -103,6 +104,25 @@ Three ships to pick from:
 | ACE  | Single fast bolt | 0.24s |
 | TANK | Triple spread shot | 0.50s |
 | ZAP  | Piercing plasma orb (3 damage, passes through) | 0.80s |
+
+## The lane grid
+
+The playfield is built on one invisible column grid, defined once in
+`Global.COLUMN_WIDTH` (78px, the formation's column pitch) and
+`Global.LANE_WIDTH` (39px, half of it). Formation rows with an even number of
+enemies sit half a column off centre, so the player's lanes are half-width to
+reach either family of columns — 19 lanes across the 840px playfield.
+
+- `spawner.gd::_add()` rounds every formation slot onto the grid, so whichever
+  shape a wave takes, each enemy sits on a lane.
+- `spawner.gd::get_slot_position()` keeps the block breathing vertically but
+  makes the side-to-side sway shuffle a whole lane at a time, so the formation
+  never drifts off the grid mid-wave.
+- `player.gd` moves the ship by lane index, never by pixels, and glides to the
+  new lane in `lane_glide_time` seconds.
+
+The result is that the ship can always be lined up exactly under an enemy, with
+no half-column gap.
 
 ## Presentation
 

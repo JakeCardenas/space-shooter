@@ -3,8 +3,11 @@
 ## Desktop
 
 ### In game
-- **←/→** or **A/D** — slide left and right. The ship stays on the bottom row;
-  there is no vertical movement.
+- **←/→** or **A/D** — step one lane left or right. One press is one lane;
+  holding the key does nothing until you press it again. The lanes are the same
+  grid the enemy formation sits on, so the ship always lines up dead centre
+  under a column. The ship stays on the bottom row — there is no vertical
+  movement.
 - **SPACE** — hold to fire continuously.
 - **Left mouse button** — hold to steer toward the cursor and fire at once.
 - **ESC** — pause.
@@ -21,8 +24,10 @@
 Touch controls appear automatically when `DisplayServer.is_touchscreen_available()`
 reports a touchscreen, and hide again on game over.
 
-- **Virtual joystick** (bottom-left) — drag to move. Auto-centres on release and
-  has a dead zone so a resting thumb does not drift the ship.
+- **Virtual joystick** (bottom-left) — one push is one lane. It has to come back
+  to centre before it steps again, matching the one-press-one-lane keyboard
+  feel. Auto-centres on release, with a dead zone so a resting thumb does not
+  drift the ship.
 - **FIRE button** (bottom-right) — hold to fire continuously.
 - **Menus** — tap the entries directly; every menu item is also a real `Button`.
 
