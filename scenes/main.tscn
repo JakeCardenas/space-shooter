@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui.gd" id="1_ui"]
 [ext_resource type="Script" path="res://scripts/bg.gd" id="2_bg"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scripts/stage_flags.gd" id="12_flags"]
 [ext_resource type="PackedScene" path="res://scenes/virtual_joystick.tscn" id="13_stick"]
 [ext_resource type="PackedScene" path="res://scenes/fire_button.tscn" id="14_fire"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="15_pause"]
 
 [sub_resource type="StyleBoxEmpty" id="SB_flat"]
 
@@ -129,109 +130,108 @@ vertical_alignment = 1
 position = Vector2(105, 118)
 script = ExtResource("10_logo")
 
-[node name="ShipPreview" type="Sprite2D" parent="CanvasLayer/startScreen"]
-position = Vector2(420, 310)
-scale = Vector2(3, 3)
-texture = ExtResource("6_s1")
-
 [node name="MenuCursor" type="Label" parent="CanvasLayer/startScreen"]
 layout_mode = 0
-offset_left = 288.0
-offset_top = 424.0
-offset_right = 328.0
-offset_bottom = 464.0
+offset_left = 236.0
+offset_top = 340.0
+offset_right = 280.0
+offset_bottom = 384.0
 theme_override_colors/font_color = Color(1, 0.831373, 0.360784, 1)
 theme_override_font_sizes/font_size = 24
 text = "▶"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ButtonShipOne" type="Button" parent="CanvasLayer/startScreen"]
+[node name="ButtonPlay" type="Button" parent="CanvasLayer/startScreen"]
 layout_mode = 0
-offset_left = 340.0
-offset_top = 424.0
-offset_right = 580.0
-offset_bottom = 464.0
+offset_left = 300.0
+offset_top = 340.0
+offset_right = 700.0
+offset_bottom = 384.0
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("SB_flat")
 theme_override_styles/hover = SubResource("SB_flat")
 theme_override_styles/pressed = SubResource("SB_flat")
-text = "ACE"
+text = "PLAY"
 alignment = 0
 
-[node name="ButtonShipTwo" type="Button" parent="CanvasLayer/startScreen"]
+[node name="ButtonShips" type="Button" parent="CanvasLayer/startScreen"]
 layout_mode = 0
-offset_left = 340.0
-offset_top = 476.0
-offset_right = 580.0
-offset_bottom = 516.0
+offset_left = 300.0
+offset_top = 404.0
+offset_right = 700.0
+offset_bottom = 448.0
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("SB_flat")
 theme_override_styles/hover = SubResource("SB_flat")
 theme_override_styles/pressed = SubResource("SB_flat")
-text = "TANK"
+text = "SHIP SELECT"
 alignment = 0
 
-[node name="ButtonShipThree" type="Button" parent="CanvasLayer/startScreen"]
+[node name="ButtonScores" type="Button" parent="CanvasLayer/startScreen"]
 layout_mode = 0
-offset_left = 340.0
-offset_top = 528.0
-offset_right = 580.0
-offset_bottom = 568.0
+offset_left = 300.0
+offset_top = 468.0
+offset_right = 700.0
+offset_bottom = 512.0
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("SB_flat")
 theme_override_styles/hover = SubResource("SB_flat")
 theme_override_styles/pressed = SubResource("SB_flat")
-text = "ZAP"
+text = "HIGH SCORE"
 alignment = 0
 
-[node name="LabelStats" type="Label" parent="CanvasLayer/startScreen"]
+[node name="ButtonSettings" type="Button" parent="CanvasLayer/startScreen"]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 532.0
+offset_right = 700.0
+offset_bottom = 576.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "SETTINGS"
+alignment = 0
+
+[node name="ShipPreview" type="Sprite2D" parent="CanvasLayer/startScreen"]
+position = Vector2(420, 680)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("6_s1")
+
+[node name="LabelShip" type="Label" parent="CanvasLayer/startScreen"]
 layout_mode = 0
 offset_left = 30.0
-offset_top = 590.0
+offset_top = 774.0
 offset_right = 810.0
-offset_bottom = 640.0
-theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+offset_bottom = 808.0
+theme_override_colors/font_color = Color(1, 0.831373, 0.360784, 1)
 theme_override_font_sizes/font_size = 16
-text = "FAST SINGLE BOLT
-HIGH RATE OF FIRE"
+text = "ACE"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="ButtonChoose" type="Button" parent="CanvasLayer/startScreen"]
-layout_mode = 0
-offset_left = 240.0
-offset_top = 674.0
-offset_right = 600.0
-offset_bottom = 740.0
-theme_override_font_sizes/font_size = 24
-text = "PRESS START"
 
 [node name="LabelHelp" type="Label" parent="CanvasLayer/startScreen"]
 layout_mode = 0
 offset_left = 30.0
-offset_top = 786.0
+offset_top = 844.0
 offset_right = 810.0
-offset_bottom = 856.0
+offset_bottom = 906.0
 theme_override_colors/font_color = Color(0.372549, 0.443137, 0.560784, 1)
 theme_override_font_sizes/font_size = 16
-text = "HOLD LEFT MOUSE TO FLY AND FIRE
-
-ENTER STARTS     ARROWS PICK SHIP"
+text = "ARROWS OR A D MOVE\nSPACEBAR FIRES     ESC PAUSES"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="LabelCopy" type="Label" parent="CanvasLayer/startScreen"]
 layout_mode = 0
 offset_left = 30.0
-offset_top = 946.0
+offset_top = 926.0
 offset_right = 810.0
 offset_bottom = 1016.0
 theme_override_colors/font_color = Color(1, 0.301961, 0.34902, 1)
 theme_override_font_sizes/font_size = 16
-text = "STARBYTE
-
-(C) 2026   ALL RIGHTS RESERVED"
+text = "STARBYTE\nMUSIC BY MDK\n(C) 2026   ALL RIGHTS RESERVED"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -673,10 +673,493 @@ text = "PRESS ENTER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[connection signal="pressed" from="CanvasLayer/startScreen/ButtonShipOne" to="." method="_on_button_ship_one_pressed"]
-[connection signal="pressed" from="CanvasLayer/startScreen/ButtonShipTwo" to="." method="_on_button_ship_two_pressed"]
-[connection signal="pressed" from="CanvasLayer/startScreen/ButtonShipThree" to="." method="_on_button_ship_three_pressed"]
-[connection signal="pressed" from="CanvasLayer/startScreen/ButtonChoose" to="." method="_on_button_choose_pressed"]
+
+[node name="shipScreen" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("5_theme")
+
+[node name="LabelTitle" type="Label" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 110.0
+offset_right = 810.0
+offset_bottom = 156.0
+theme_override_colors/font_color = Color(0.352941, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "SHIP SELECT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShipPreview" type="Sprite2D" parent="CanvasLayer/shipScreen"]
+position = Vector2(420, 285)
+scale = Vector2(2.2, 2.2)
+texture = ExtResource("6_s1")
+
+[node name="MenuCursor" type="Label" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 288.0
+offset_top = 424.0
+offset_right = 332.0
+offset_bottom = 468.0
+theme_override_colors/font_color = Color(1, 0.831373, 0.360784, 1)
+theme_override_font_sizes/font_size = 24
+text = "▶"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ButtonShipOne" type="Button" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 424.0
+offset_right = 580.0
+offset_bottom = 464.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "ACE"
+alignment = 0
+
+[node name="ButtonShipTwo" type="Button" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 476.0
+offset_right = 580.0
+offset_bottom = 516.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "TANK"
+alignment = 0
+
+[node name="ButtonShipThree" type="Button" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 528.0
+offset_right = 580.0
+offset_bottom = 568.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "ZAP"
+alignment = 0
+
+[node name="LabelStats" type="Label" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 590.0
+offset_right = 810.0
+offset_bottom = 640.0
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 16
+text = "FAST SINGLE BOLT\nHIGH RATE OF FIRE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LabelHint" type="Label" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 700.0
+offset_right = 810.0
+offset_bottom = 740.0
+theme_override_colors/font_color = Color(0.372549, 0.443137, 0.560784, 1)
+theme_override_font_sizes/font_size = 16
+text = "UP DOWN PICK     ENTER CONFIRMS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ButtonBack" type="Button" parent="CanvasLayer/shipScreen"]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 800.0
+offset_right = 540.0
+offset_bottom = 844.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "BACK"
+alignment = 1
+
+[node name="scoresScreen" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("5_theme")
+
+[node name="LabelTitle" type="Label" parent="CanvasLayer/scoresScreen"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 110.0
+offset_right = 810.0
+offset_bottom = 156.0
+theme_override_colors/font_color = Color(0.352941, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "HIGH SCORES"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ranks" type="VBoxContainer" parent="CanvasLayer/scoresScreen"]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 210.0
+offset_right = 670.0
+offset_bottom = 690.0
+theme_override_constants/separation = 10
+
+[node name="rank1" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 1 ---      0"
+
+[node name="rank2" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 2 ---      0"
+
+[node name="rank3" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 3 ---      0"
+
+[node name="rank4" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 4 ---      0"
+
+[node name="rank5" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 5 ---      0"
+
+[node name="rank6" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 6 ---      0"
+
+[node name="rank7" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 7 ---      0"
+
+[node name="rank8" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 8 ---      0"
+
+[node name="rank9" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = " 9 ---      0"
+
+[node name="rank10" type="Label" parent="CanvasLayer/scoresScreen/ranks"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.545098, 0.639216, 0.792157, 1)
+theme_override_font_sizes/font_size = 24
+text = "10 ---      0"
+
+[node name="ButtonBack" type="Button" parent="CanvasLayer/scoresScreen"]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 800.0
+offset_right = 540.0
+offset_bottom = 844.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "BACK"
+alignment = 1
+
+[node name="settingsScreen" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("5_theme")
+
+[node name="LabelTitle" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 110.0
+offset_right = 810.0
+offset_bottom = 156.0
+theme_override_colors/font_color = Color(0.352941, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "SETTINGS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuCursor" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 260.0
+offset_right = 140.0
+offset_bottom = 304.0
+theme_override_colors/font_color = Color(1, 0.831373, 0.360784, 1)
+theme_override_font_sizes/font_size = 24
+text = "▶"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LabelMaster" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 260.0
+offset_right = 420.0
+offset_bottom = 304.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "MASTER"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ValueMaster" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 260.0
+offset_right = 760.0
+offset_bottom = 304.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LabelMusic" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 330.0
+offset_right = 420.0
+offset_bottom = 374.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "MUSIC"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ValueMusic" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 330.0
+offset_right = 760.0
+offset_bottom = 374.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LabelSfx" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 400.0
+offset_right = 420.0
+offset_bottom = 444.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "SFX"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ValueSfx" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 400.0
+offset_right = 760.0
+offset_bottom = 444.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LabelScreen" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 470.0
+offset_right = 420.0
+offset_bottom = 514.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "SCREEN"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ValueScreen" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 470.0
+offset_right = 760.0
+offset_bottom = 514.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="ButtonBack" type="Button" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 560.0
+offset_right = 470.0
+offset_bottom = 604.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "BACK"
+alignment = 0
+
+[node name="LabelHint" type="Label" parent="CanvasLayer/settingsScreen"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 700.0
+offset_right = 810.0
+offset_bottom = 760.0
+theme_override_colors/font_color = Color(0.372549, 0.443137, 0.560784, 1)
+theme_override_font_sizes/font_size = 16
+text = "UP DOWN PICK     LEFT RIGHT ADJUST"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+layer = 3
+process_mode = 3
+visible = false
+script = ExtResource("15_pause")
+
+[node name="Panel" type="Control" parent="PauseLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("5_theme")
+
+[node name="Dim" type="ColorRect" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_right = 840.0
+offset_bottom = 1080.0
+color = Color(0, 0, 0, 0.85)
+
+[node name="LabelTitle" type="Label" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 330.0
+offset_right = 810.0
+offset_bottom = 386.0
+theme_override_colors/font_color = Color(1, 0.831373, 0.360784, 1)
+theme_override_font_sizes/font_size = 32
+text = "PAUSED"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuCursor" type="Label" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_left = 216.0
+offset_top = 470.0
+offset_right = 260.0
+offset_bottom = 514.0
+theme_override_colors/font_color = Color(1, 0.831373, 0.360784, 1)
+theme_override_font_sizes/font_size = 24
+text = "▶"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ButtonResume" type="Button" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 470.0
+offset_right = 700.0
+offset_bottom = 514.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "RESUME"
+alignment = 0
+
+[node name="ButtonRestart" type="Button" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 534.0
+offset_right = 700.0
+offset_bottom = 578.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "RESTART"
+alignment = 0
+
+[node name="ButtonQuit" type="Button" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 598.0
+offset_right = 700.0
+offset_bottom = 642.0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("SB_flat")
+theme_override_styles/hover = SubResource("SB_flat")
+theme_override_styles/pressed = SubResource("SB_flat")
+text = "QUIT TO TITLE"
+alignment = 0
+
+[node name="LabelHint" type="Label" parent="PauseLayer/Panel"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 700.0
+offset_right = 810.0
+offset_bottom = 740.0
+theme_override_colors/font_color = Color(0.372549, 0.443137, 0.560784, 1)
+theme_override_font_sizes/font_size = 16
+text = "ESC RESUMES"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="pressed" from="CanvasLayer/startScreen/ButtonPlay" to="." method="_on_button_play_pressed"]
+[connection signal="pressed" from="CanvasLayer/startScreen/ButtonShips" to="." method="_on_button_ships_pressed"]
+[connection signal="pressed" from="CanvasLayer/startScreen/ButtonScores" to="." method="_on_button_scores_pressed"]
+[connection signal="pressed" from="CanvasLayer/startScreen/ButtonSettings" to="." method="_on_button_settings_pressed"]
+[connection signal="pressed" from="CanvasLayer/shipScreen/ButtonShipOne" to="." method="_on_button_ship_one_pressed"]
+[connection signal="pressed" from="CanvasLayer/shipScreen/ButtonShipTwo" to="." method="_on_button_ship_two_pressed"]
+[connection signal="pressed" from="CanvasLayer/shipScreen/ButtonShipThree" to="." method="_on_button_ship_three_pressed"]
+[connection signal="pressed" from="CanvasLayer/shipScreen/ButtonBack" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="CanvasLayer/scoresScreen/ButtonBack" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="CanvasLayer/settingsScreen/ButtonBack" to="." method="_on_back_pressed"]
 [connection signal="pressed" from="CanvasLayer/inGameScreen/ButtonMute" to="." method="_on_button_mute_pressed"]
 [connection signal="pressed" from="CanvasLayer/gameOverScreen/ButtonMenu" to="." method="_on_button_menu_pressed"]
 [connection signal="pressed" from="CanvasLayer/initialsScreen/ButtonConfirm" to="." method="_on_button_confirm_initials_pressed"]
+[connection signal="pressed" from="PauseLayer/Panel/ButtonResume" to="PauseLayer" method="_on_resume_pressed"]
+[connection signal="pressed" from="PauseLayer/Panel/ButtonRestart" to="PauseLayer" method="_on_restart_pressed"]
+[connection signal="pressed" from="PauseLayer/Panel/ButtonQuit" to="PauseLayer" method="_on_quit_pressed"]

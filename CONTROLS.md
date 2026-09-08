@@ -1,58 +1,42 @@
 # STARBYTE Controls
 
-## Desktop Controls
+## Desktop
 
-### Movement
-- **WASD Keys** or **Arrow Keys** - Move ship in all directions
-- Movement is smooth and responsive with full 360° freedom
+### In game
+- **←/→** or **A/D** — slide left and right. The ship stays on the bottom row;
+  there is no vertical movement.
+- **SPACE** — hold to fire continuously.
+- **Left mouse button** — hold to steer toward the cursor and fire at once.
+- **ESC** — pause.
 
-### Shooting
-- **Spacebar** - Hold to fire continuously
-- **Left Mouse Button** - Hold to fly toward cursor AND fire (original control scheme)
+### Menus
+- **↑/↓** — move the cursor.
+- **ENTER** — confirm.
+- **←/→** — adjust a value (volume meters in Settings) or change ship in Ship
+  Select.
+- **ESC** — back out one screen, and resume from the pause menu.
 
-### Menu Navigation
-- **Arrow Keys** - Select ship (up/down) on title screen
-- **Enter** - Start game / Confirm selection
-- **ESC** - Pause game (coming in Phase 3)
+## Mobile and touch
 
-## Mobile/Touch Controls
+Touch controls appear automatically when `DisplayServer.is_touchscreen_available()`
+reports a touchscreen, and hide again on game over.
 
-### Movement
-- **Virtual Joystick** (bottom-left corner)
-  - Touch and drag to move ship
-  - Auto-centers when released
-  - Dead zone prevents accidental micro-movements
+- **Virtual joystick** (bottom-left) — drag to move. Auto-centres on release and
+  has a dead zone so a resting thumb does not drift the ship.
+- **FIRE button** (bottom-right) — hold to fire continuously.
+- **Menus** — tap the entries directly; every menu item is also a real `Button`.
 
-### Shooting
-- **FIRE Button** (bottom-right corner)
-  - Large touch-friendly button
-  - Hold to fire continuously
-  - Visual feedback when pressed
+## Input priority
 
-### Menu Navigation
-- **Touch** - Tap buttons directly
-- Ship selection works with touch
+All input methods stay live at once, checked in this order:
 
-## Control Priority
+1. Keyboard (`move_left` / `move_right`, `shoot`)
+2. Virtual joystick
+3. Mouse
 
-The game supports multiple input methods simultaneously:
+So switching between them mid-run never needs a mode toggle.
 
-1. **Keyboard** takes priority (WASD/Arrows for movement, Spacebar for shooting)
-2. **Virtual Controls** activate when keyboard is not in use
-3. **Mouse** works alongside any other input (click to move + shoot)
+## Settings
 
-This allows seamless switching between control methods without conflicts.
-
-## Platform Detection
-
-- **Desktop:** Keyboard and mouse controls enabled by default
-- **Mobile/Tablet:** Virtual controls automatically appear
-- **Web:** Detects touch capability and shows appropriate controls
-
-## Coming Soon (Phase 2-3)
-
-- Configurable control schemes
-- Button remapping
-- Auto-fire toggle option
-- Sensitivity settings
-- Pause button for mobile
+Master, music and SFX volumes each drive their own audio bus and are saved to
+`user://settings.save` along with the fullscreen toggle and the chosen ship.

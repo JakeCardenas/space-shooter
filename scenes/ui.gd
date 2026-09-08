@@ -17,10 +17,14 @@ const SHIP_TEXTURES := {
 	3: preload("res://art/ship3.png"),
 }
 const CURSOR_Y := {1: 424.0, 2: 476.0, 3: 528.0}
+const SETTING_BUSES := ["Master", "Music", "SFX"]
 
 @onready var _player: Area2D = $Player
 @onready var _spawner: Node2D = $Spawner
 @onready var _start_screen: Control = $CanvasLayer/startScreen
+@onready var _ship_screen: Control = $CanvasLayer/shipScreen
+@onready var _scores_screen: Control = $CanvasLayer/scoresScreen
+@onready var _settings_screen: Control = $CanvasLayer/settingsScreen
 @onready var _in_game_screen: Control = $CanvasLayer/inGameScreen
 @onready var _game_over_screen: Control = $CanvasLayer/gameOverScreen
 @onready var _touch_controls: CanvasLayer = $TouchControls
@@ -31,7 +35,29 @@ const CURSOR_Y := {1: 424.0, 2: 476.0, 3: 528.0}
 	$CanvasLayer/initialsScreen/slots/slot2,
 ]
 @onready var _cursor: Label = $CanvasLayer/startScreen/MenuCursor
-@onready var _preview: Sprite2D = $CanvasLayer/startScreen/ShipPreview
+@onready var _title_preview: Sprite2D = $CanvasLayer/startScreen/ShipPreview
+@onready var _title_items: Array[Button] = [
+	$CanvasLayer/startScreen/ButtonPlay,
+	$CanvasLayer/startScreen/ButtonShips,
+	$CanvasLayer/startScreen/ButtonScores,
+	$CanvasLayer/startScreen/ButtonSettings,
+]
+@onready var _ship_cursor: Label = $CanvasLayer/shipScreen/MenuCursor
+@onready var _preview: Sprite2D = $CanvasLayer/shipScreen/ShipPreview
+@onready var _settings_cursor: Label = $CanvasLayer/settingsScreen/MenuCursor
+@onready var _settings_rows: Array[Control] = [
+	$CanvasLayer/settingsScreen/LabelMaster,
+	$CanvasLayer/settingsScreen/LabelMusic,
+	$CanvasLayer/settingsScreen/LabelSfx,
+	$CanvasLayer/settingsScreen/LabelScreen,
+	$CanvasLayer/settingsScreen/ButtonBack,
+]
+@onready var _settings_values: Array[Label] = [
+	$CanvasLayer/settingsScreen/ValueMaster,
+	$CanvasLayer/settingsScreen/ValueMusic,
+	$CanvasLayer/settingsScreen/ValueSfx,
+	$CanvasLayer/settingsScreen/ValueScreen,
+]
 @onready var _wave_label: Label = $CanvasLayer/inGameScreen/LabelWave
 @onready var _bonus_label: Label = $CanvasLayer/inGameScreen/LabelBonus
 @onready var _combo_label: Label = $CanvasLayer/inGameScreen/LabelCombo
@@ -54,6 +80,9 @@ var _menu_time := 0.0
 var _banner_tween: Tween = null
 var _blink := 0.0
 var _has_touch := false
+var _screen := "title"
+var _menu_index := 0
+var _settings_index := 0
 
 
 func _ready() -> void:
@@ -61,7 +90,7 @@ func _ready() -> void:
 	Global.reset_values()
 	Global.set_mute(Global.mute)
 
-	_start_screen.visible = true
+	_show_menu("title")
 	_in_game_screen.visible = false
 	_game_over_screen.visible = false
 	_initials_screen.visible = false
@@ -74,6 +103,7 @@ func _ready() -> void:
 	for button in _all_buttons():
 		button.focus_mode = Control.FOCUS_NONE
 
+	$PauseLayer.opened.connect(_hide_banner)
 	Global.combo_changed.connect(_on_combo_changed)
 	Global.points_awarded.connect(_on_points_awarded)
 	Global.bonus_awarded.connect(_on_bonus_awarded)
@@ -90,32 +120,51 @@ func _ready() -> void:
 	$CanvasLayer/startScreen/HeaderScore.text = str(Global.score)
 	_update_ship_preview()
 	_update_mute_labels()
-	_flash_start_button()
+	_update_help_text()
+	_refresh_title_menu()
+	_refresh_settings()
+	_fill_ranking($CanvasLayer/scoresScreen/ranks)
 	Music.play("menu")
-	
+
 	call_deferred("_setup_mobile_controls")
+	if Global.restart_ship > 0:
+		Global.chosen_ship = Global.restart_ship
+		Global.restart_ship = 0
+		call_deferred("_start_game")
 
 
 func _all_buttons() -> Array:
-	return [
-		$CanvasLayer/startScreen/ButtonShipOne,
-		$CanvasLayer/startScreen/ButtonShipTwo,
-		$CanvasLayer/startScreen/ButtonShipThree,
-		$CanvasLayer/startScreen/ButtonChoose,
+	var buttons: Array = [
+		$CanvasLayer/shipScreen/ButtonShipOne,
+		$CanvasLayer/shipScreen/ButtonShipTwo,
+		$CanvasLayer/shipScreen/ButtonShipThree,
+		$CanvasLayer/shipScreen/ButtonBack,
+		$CanvasLayer/scoresScreen/ButtonBack,
+		$CanvasLayer/settingsScreen/ButtonBack,
 		$CanvasLayer/inGameScreen/ButtonMute,
 		$CanvasLayer/gameOverScreen/ButtonMenu,
 	]
+	buttons.append_array(_title_items)
+	return buttons
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _start_screen.visible:
-		if event.is_action_pressed("ui_accept"):
-			_on_button_choose_pressed()
-		elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left"):
-			_select_ship(Global.chosen_ship - 1)
-		elif event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
-			_select_ship(Global.chosen_ship + 1)
-	elif _initials_screen.visible:
+	match _screen:
+		"title":
+			_title_input(event)
+			return
+		"ship":
+			_ship_input(event)
+			return
+		"scores":
+			if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+				_on_back_pressed()
+			return
+		"settings":
+			_settings_input(event)
+			return
+
+	if _initials_screen.visible:
 		if event.is_action_pressed("ui_up"):
 			Global.cycle_initial(1)
 			_refresh_initial_slots()
@@ -135,9 +184,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	if _start_screen.visible:
+	if _screen != "":
 		_menu_time += delta
-		_animate_selection()
+		_animate_menu()
 		return
 	if _initials_screen.visible:
 		_menu_time += delta
@@ -160,12 +209,157 @@ func _process(delta: float) -> void:
 		_show_game_over()
 
 
-# --- title screen ----------------------------------------------------------
+# --- menus -----------------------------------------------------------------
 
-func _animate_selection() -> void:
-	_preview.scale = Vector2.ONE * (2.0 + sin(_menu_time * 5.0) * 0.07)
-	_cursor.modulate.a = 1.0 if fposmod(_menu_time, 0.7) < 0.45 else 0.15
+func _show_menu(name: String) -> void:
+	_screen = name
+	_start_screen.visible = name == "title"
+	_ship_screen.visible = name == "ship"
+	_scores_screen.visible = name == "scores"
+	_settings_screen.visible = name == "settings"
+	_menu_time = 0.0
 
+
+func _animate_menu() -> void:
+	var blink := 1.0 if fposmod(_menu_time, 0.7) < 0.45 else 0.15
+	match _screen:
+		"title":
+			_cursor.modulate.a = blink
+			_title_preview.scale = Vector2.ONE * (1.5 + sin(_menu_time * 5.0) * 0.04)
+		"ship":
+			_ship_cursor.modulate.a = blink
+			_preview.scale = Vector2.ONE * (2.2 + sin(_menu_time * 5.0) * 0.06)
+		"settings":
+			_settings_cursor.modulate.a = blink
+
+
+func _highlight(items: Array, index: int) -> void:
+	for i in items.size():
+		items[i].modulate = Color(1.0, 0.83, 0.36) if i == index else Color(0.86, 0.91, 1.0)
+
+
+# --- title -----------------------------------------------------------------
+
+func _title_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_move_title(-1)
+	elif event.is_action_pressed("ui_down"):
+		_move_title(1)
+	elif event.is_action_pressed("ui_accept"):
+		_activate_title()
+
+
+func _move_title(step: int) -> void:
+	_menu_index = wrapi(_menu_index + step, 0, _title_items.size())
+	_menu_time = 0.0
+	Sfx.play("click", -10.0)
+	_refresh_title_menu()
+
+
+func _refresh_title_menu() -> void:
+	_cursor.position.y = _title_items[_menu_index].position.y
+	_highlight(_title_items, _menu_index)
+
+
+func _activate_title() -> void:
+	match _menu_index:
+		0: _start_game()
+		1: _on_button_ships_pressed()
+		2: _on_button_scores_pressed()
+		3: _on_button_settings_pressed()
+
+
+func _update_help_text() -> void:
+	var help_label: Label = $CanvasLayer/startScreen/LabelHelp
+	if DisplayServer.is_touchscreen_available():
+		help_label.text = "SLIDE TO FLY     TAP FIRE TO SHOOT"
+	else:
+		help_label.text = "ARROWS OR A D MOVE\nSPACEBAR FIRES     ESC PAUSES"
+
+
+# --- ship select -----------------------------------------------------------
+
+func _ship_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left"):
+		_select_ship(Global.chosen_ship - 1)
+	elif event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
+		_select_ship(Global.chosen_ship + 1)
+	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+		_on_back_pressed()
+
+
+func _select_ship(index: int) -> void:
+	Global.chosen_ship = wrapi(index, 1, 4)
+	Global.save_settings()
+	Sfx.play("click", -4.0)
+	_update_ship_preview()
+
+
+func _update_ship_preview() -> void:
+	var ship: int = Global.chosen_ship
+	$CanvasLayer/shipScreen/LabelStats.text = SHIP_BLURBS[ship]
+	$CanvasLayer/startScreen/LabelShip.text = "SHIP   %s" % SHIP_NAMES[ship]
+	_preview.texture = SHIP_TEXTURES[ship]
+	_title_preview.texture = SHIP_TEXTURES[ship]
+	var tween := create_tween()
+	tween.tween_property(_ship_cursor, "position:y", CURSOR_Y[ship], 0.1) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+# --- settings --------------------------------------------------------------
+
+func _settings_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_move_settings(-1)
+	elif event.is_action_pressed("ui_down"):
+		_move_settings(1)
+	elif event.is_action_pressed("ui_left"):
+		_adjust_setting(-1)
+	elif event.is_action_pressed("ui_right"):
+		_adjust_setting(1)
+	elif event.is_action_pressed("ui_accept"):
+		if _settings_index == _settings_rows.size() - 1:
+			_on_back_pressed()
+		else:
+			_adjust_setting(1)
+	elif event.is_action_pressed("ui_cancel"):
+		_on_back_pressed()
+
+
+func _move_settings(step: int) -> void:
+	_settings_index = wrapi(_settings_index + step, 0, _settings_rows.size())
+	_menu_time = 0.0
+	Sfx.play("click", -10.0)
+	_refresh_settings()
+
+
+func _adjust_setting(step: int) -> void:
+	if _settings_index < SETTING_BUSES.size():
+		var bus: String = SETTING_BUSES[_settings_index]
+		Global.set_volume(bus, snappedf(Global.volumes[bus] + step * 0.1, 0.1))
+		Sfx.play("click", -10.0)
+	elif _settings_index == SETTING_BUSES.size():
+		Global.set_fullscreen(not Global.fullscreen)
+		Sfx.play("click", -10.0)
+	_refresh_settings()
+
+
+func _refresh_settings() -> void:
+	_settings_cursor.position.y = _settings_rows[_settings_index].position.y
+	_highlight(_settings_rows, _settings_index)
+	for i in SETTING_BUSES.size():
+		_settings_values[i].text = _volume_bar(Global.volumes[SETTING_BUSES[i]])
+	_settings_values[SETTING_BUSES.size()].text = \
+		"FULLSCREEN" if Global.fullscreen else "WINDOW"
+	_highlight(_settings_values, _settings_index)
+
+
+func _volume_bar(value: float) -> String:
+	var filled := roundi(clampf(value, 0.0, 1.0) * 10.0)
+	return "[%s%s] %d" % ["#".repeat(filled), ".".repeat(10 - filled), filled]
+
+
+# --- initials entry --------------------------------------------------------
 
 func _refresh_initial_slots() -> void:
 	var letters := Global.initial_letters()
@@ -180,34 +374,6 @@ func _blink_initial_cursor() -> void:
 	var cursor := Global.initial_cursor()
 	var slot := _initial_slots[cursor]
 	slot.modulate.a = 1.0 if fposmod(_menu_time, 0.6) < 0.4 else 0.25
-
-
-func _flash_start_button() -> void:
-	var button: Button = $CanvasLayer/startScreen/ButtonChoose
-	var tween := create_tween().set_loops()
-	tween.tween_property(button, "modulate:a", 0.25, 0.45)
-	tween.tween_property(button, "modulate:a", 1.0, 0.45)
-	
-	var help_label: Label = $CanvasLayer/startScreen/LabelHelp
-	var is_mobile := DisplayServer.is_touchscreen_available()
-	if is_mobile:
-		help_label.text = "USE VIRTUAL JOYSTICK AND FIRE BUTTON\n\nENTER STARTS     ARROWS PICK SHIP"
-	else:
-		help_label.text = "WASD OR ARROWS TO MOVE\nSPACEBAR OR HOLD MOUSE TO SHOOT\n\nENTER STARTS     ARROWS PICK SHIP"
-
-
-func _select_ship(index: int) -> void:
-	Global.chosen_ship = wrapi(index, 1, 4)
-	Sfx.play("click", -4.0)
-	_update_ship_preview()
-
-
-func _update_ship_preview() -> void:
-	$CanvasLayer/startScreen/LabelStats.text = SHIP_BLURBS[Global.chosen_ship]
-	_preview.texture = SHIP_TEXTURES[Global.chosen_ship]
-	var tween := create_tween()
-	tween.tween_property(_cursor, "position:y", CURSOR_Y[Global.chosen_ship], 0.1) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 # --- waves -----------------------------------------------------------------
@@ -227,6 +393,13 @@ func _banner(text: String, tint: Color, hold: float) -> void:
 	_banner_tween.tween_callback(func() -> void:
 		_wave_label.visible = false
 		_wave_label.modulate.a = 1.0)
+
+
+func _hide_banner() -> void:
+	if is_instance_valid(_banner_tween):
+		_banner_tween.kill()
+	_wave_label.visible = false
+	_wave_label.modulate.a = 1.0
 
 
 func _on_wave_started(wave: int) -> void:
@@ -380,11 +553,16 @@ func _reveal_game_over() -> void:
 	_game_over_screen.visible = true
 
 
-func _fill_ranking() -> void:
+func _fill_ranking(container: Node = null) -> void:
+	if container == null:
+		container = $CanvasLayer/gameOverScreen/ranks
 	var rows := Global.leaderboard
-	for i in rows.size():
+	for i in container.get_child_count():
+		var label: Label = container.get_child(i)
+		if i >= rows.size():
+			label.text = ""
+			continue
 		var row: Dictionary = rows[i]
-		var label: Label = $CanvasLayer/gameOverScreen/ranks.get_child(i)
 		label.text = "%2d %-4s %8d" % [i + 1, row["name"], row["score"]]
 		label.modulate = Color(1.0, 0.83, 0.36) if i == Global.last_leaderboard_rank else Color(0.72, 0.79, 0.9)
 
@@ -394,6 +572,35 @@ func _update_mute_labels() -> void:
 
 
 # --- button handlers -------------------------------------------------------
+
+func _on_button_play_pressed() -> void:
+	_start_game()
+
+
+func _on_button_ships_pressed() -> void:
+	Sfx.play("click", -8.0)
+	_show_menu("ship")
+	_update_ship_preview()
+
+
+func _on_button_scores_pressed() -> void:
+	Sfx.play("click", -8.0)
+	_fill_ranking($CanvasLayer/scoresScreen/ranks)
+	_show_menu("scores")
+
+
+func _on_button_settings_pressed() -> void:
+	Sfx.play("click", -8.0)
+	_settings_index = 0
+	_refresh_settings()
+	_show_menu("settings")
+
+
+func _on_back_pressed() -> void:
+	Sfx.play("click", -8.0)
+	_show_menu("title")
+	_refresh_title_menu()
+
 
 func _on_button_ship_one_pressed() -> void:
 	_select_ship(1)
@@ -407,12 +614,12 @@ func _on_button_ship_three_pressed() -> void:
 	_select_ship(3)
 
 
-func _on_button_choose_pressed() -> void:
+func _start_game() -> void:
 	Sfx.play("wave_start", -6.0)
 	_player.show_chosen_ship()
 	for life in _lives:
 		life.texture = SHIP_TEXTURES[Global.chosen_ship]
-	_start_screen.visible = false
+	_show_menu("")
 	_in_game_screen.visible = true
 	Global.game_on = true
 	_banner("START", Color(1.0, 0.3, 0.35), 0.5)

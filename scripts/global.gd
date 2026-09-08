@@ -8,9 +8,14 @@ signal high_score_beaten
 
 const SAVE_PATH := "user://highscore.save"
 const LEADERBOARD_PATH := "user://leaderboard.save"
+const SETTINGS_PATH := "user://settings.save"
 const LEADERBOARD_SIZE := 10
 const INITIAL_CHARSET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const COMBO_WINDOW := 2.2
+
+# Mixing offsets baked into the bus layout. A slider at 1.0 keeps the intended
+# balance; anything lower attenuates from there.
+const BUS_BASE_DB := {"Master": 0.0, "Music": -12.0, "SFX": -10.0}
 
 # Stand-in cabinet rankings so the board is never empty. The player's own best
 # is merged in and marked, arcade style.
@@ -28,6 +33,10 @@ var score := 0
 var high_score := 0
 var chosen_ship := 1
 var mute := false
+var fullscreen := false
+var volumes := {"Master": 1.0, "Music": 1.0, "SFX": 1.0}
+# Set before reloading the scene to drop straight back into a run.
+var restart_ship := 0
 
 var wave := 0
 var combo := 0
@@ -50,13 +59,13 @@ var _previous_high := 0
 func _ready() -> void:
 	load_high_score()
 	load_leaderboard()
+	load_settings()
 
 
 func reset_values() -> void:
 	game_on = false
 	game_over = false
 	score = 0
-	chosen_ship = 1
 	wave = 0
 	combo = 0
 	new_high_score = false
@@ -202,9 +211,76 @@ func start_slowmo(duration: float, factor: float = 0.5) -> void:
 	timer.timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
 
+# --- settings ---------------------------------------------------------------
+
 func set_mute(value: bool) -> void:
 	mute = value
-	AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), mute)
+	apply_volume("Master")
+	save_settings()
+
+
+func set_volume(bus: String, value: float) -> void:
+	volumes[bus] = clampf(value, 0.0, 1.0)
+	apply_volume(bus)
+	save_settings()
+
+
+func apply_volume(bus: String) -> void:
+	var index := AudioServer.get_bus_index(bus)
+	if index < 0:
+		return
+	var value: float = volumes[bus]
+	AudioServer.set_bus_volume_db(index, BUS_BASE_DB[bus] + linear_to_db(maxf(value, 0.001)))
+	AudioServer.set_bus_mute(index, value <= 0.0 or (bus == "Master" and mute))
+
+
+func apply_settings() -> void:
+	for bus in volumes:
+		apply_volume(bus)
+	# Browsers only grant fullscreen from a user gesture, so a saved value can
+	# never be restored on boot — the page always starts windowed.
+	if OS.has_feature("web"):
+		fullscreen = false
+	else:
+		apply_fullscreen()
+
+
+func apply_fullscreen() -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen \
+		else DisplayServer.WINDOW_MODE_WINDOWED)
+
+
+func set_fullscreen(value: bool) -> void:
+	fullscreen = value
+	apply_fullscreen()
+	save_settings()
+
+
+func save_settings() -> void:
+	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
+	if file:
+		file.store_var({
+			"volumes": volumes,
+			"mute": mute,
+			"fullscreen": fullscreen,
+			"ship": chosen_ship,
+		})
+
+
+func load_settings() -> void:
+	if FileAccess.file_exists(SETTINGS_PATH):
+		var file := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+		if file:
+			var data = file.get_var()
+			if typeof(data) == TYPE_DICTIONARY:
+				if typeof(data.get("volumes")) == TYPE_DICTIONARY:
+					for bus in volumes:
+						if data["volumes"].has(bus):
+							volumes[bus] = clampf(float(data["volumes"][bus]), 0.0, 1.0)
+				mute = bool(data.get("mute", false))
+				fullscreen = bool(data.get("fullscreen", false))
+				chosen_ship = clampi(int(data.get("ship", 1)), 1, 3)
+	apply_settings()
 
 
 func save_high_score() -> void:

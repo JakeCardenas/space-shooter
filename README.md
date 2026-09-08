@@ -89,9 +89,10 @@ uncached so new deploys appear immediately.
 
 Open the project in Godot and press **F5** (or the Play button).
 
-- **Hold the left mouse button** to fly toward the cursor *and* fire at the same time.
-- Release to stop moving and stop shooting.
-- On the title screen, **←/→** pick a ship and **ENTER** starts. **ENTER** also restarts from game over.
+- **←/→** or **A/D** slide the ship left and right — it never leaves the bottom row.
+- **SPACE** fires. Holding the left mouse button also flies and fires, for anyone who prefers it.
+- **ESC** pauses. On touch devices the virtual joystick and FIRE button appear instead.
+- **↑/↓** move the menu cursor, **ENTER** confirms, **ESC** backs out of a menu.
 - You have 3 health. Enemy ships cost 1, meteors cost 2.
 - Grab the ⚡ power-up for ~7 seconds of faster fire.
 
@@ -132,17 +133,33 @@ wide, 7.14% of the 840px playfield); props and shots use a 3-unit grid.
 ## Screens
 
 **Title / attract** — a cabinet attract screen: `1UP` / `HIGH SCORE` header row
-(red labels, white values), the logo, a large preview of the selected ship, a
-`▶` cursor menu listing ACE / TANK / ZAP, the ship blurb, a flashing
-`PRESS START` and a copyright footer. Up/down (or left/right) moves the cursor,
-ENTER starts. After 6 seconds without input, `scripts/attract.gd` flies
-decorative enemy squads across the background. Those are plain `Sprite2D`s, not
-real enemies, so attract mode never touches the gameplay systems.
+(red labels, white values), the logo, and a `▶` cursor menu listing PLAY /
+SHIP SELECT / HIGH SCORE / SETTINGS, with the currently chosen ship hovering
+below it. After 6 seconds without input, `scripts/attract.gd` flies decorative
+enemy squads across the background. Those are plain `Sprite2D`s, not real
+enemies, so attract mode never touches the gameplay systems.
 
-**HUD** — blinking `1UP` and score top-left, `HIGH SCORE` top-centre, combo
-top-right, lives as ship icons bottom-left, and **stage flags** bottom-right
-(`scripts/stage_flags.gd` — one blue flag per ten stages, one small orange flag
-for each stage after that).
+**Ship select** — a large preview, the ACE / TANK / ZAP cursor list and the
+weapon blurb. The choice is saved to `user://settings.save`, so the cabinet
+remembers it between runs.
+
+**High scores** — the Top 10 table on its own screen, readable without dying
+first.
+
+**Settings** — MASTER / MUSIC / SFX as ten-step `[####......]` meters wired
+straight to the audio buses, plus a windowed/fullscreen toggle. Left/right
+adjusts, and every change is written to `user://settings.save` immediately.
+
+**Pause** — `scripts/pause_menu.gd` on its own `CanvasLayer` with
+`process_mode = ALWAYS`, so ESC and the RESUME / RESTART / QUIT TO TITLE cursor
+keep working while `get_tree().paused` freezes everything else. RESTART sets
+`Global.restart_ship` and reloads the scene, which drops you straight back into
+a fresh run with the same ship instead of via the title screen.
+
+**HUD** — blinking `1UP` and score top-left, `HIGH SCORE` and stage top-centre,
+lives as ship icons top-right, combo mid-screen, and **stage flags**
+bottom-right (`scripts/stage_flags.gd` — one blue flag per ten stages, one small
+orange flag for each stage after that).
 
 **Game over** — score, wave reached, and a high-score table mixing the fictional
 cabinet entries in `Global.RANKS` with your own best, highlighted as `YOU`.
