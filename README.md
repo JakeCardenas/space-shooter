@@ -34,6 +34,15 @@ The export produces `index.html`, `index.js`, `index.wasm`, `index.pck`, the
 audio worklets and the icons. **All of them must be committed** — Vercel serves
 them as-is.
 
+### Caching
+
+Godot exports the same filenames on every build, so **nothing may be served with
+a long or `immutable` Cache-Control**. `vercel.json` sends `no-cache` for
+`.wasm`, `.pck` and `.js`, which makes the browser revalidate and get a cheap
+304 when the build has not changed. An `immutable` header here pins returning
+visitors to whichever build they downloaded first — the site keeps serving new
+code and their browser never asks for it.
+
 ### The loading screen
 
 `web/index.html` is generated from **`web_shell/index.html`** (set as
