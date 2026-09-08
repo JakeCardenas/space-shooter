@@ -27,6 +27,26 @@ func _process(delta: float) -> void:
 			direction_changed.emit(_current_direction)
 
 
+# A finger that slides off the stick releases somewhere else entirely, so the
+# touch-up never reaches _gui_input and the stick would stay held. Watch every
+# release for the finger we own, wherever it lands.
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch and not event.pressed \
+			and event.index == _touch_index:
+		_release()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_release()
+
+
+func _release() -> void:
+	_touch_index = -1
+	_current_direction = Vector2.ZERO
+	direction_changed.emit(_current_direction)
+
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -35,9 +55,7 @@ func _gui_input(event: InputEvent) -> void:
 				_update_direction(event.position)
 		else:
 			if event.index == _touch_index:
-				_touch_index = -1
-				_current_direction = Vector2.ZERO
-				direction_changed.emit(_current_direction)
+				_release()
 	
 	elif event is InputEventScreenDrag:
 		if event.index == _touch_index:

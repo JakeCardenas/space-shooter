@@ -106,7 +106,12 @@ func _ready() -> void:
 		Sfx.play("bonus", -18.0, 1.45)
 
 
-func _process(delta: float) -> void:
+# Movement runs on the physics tick, not the render frame. _process delta
+# varies with the frame rate, so a stall - a backgrounded tab, a GC pause -
+# would step this far enough to skip clean through a hitbox between two
+# collision checks. The physics step is a fixed 1/60s no matter what the
+# renderer is doing.
+func _physics_process(delta: float) -> void:
 	if destroyed or not Global.game_on or Global.game_over:
 		return
 

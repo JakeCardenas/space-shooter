@@ -101,7 +101,7 @@ func _start_next_wave() -> void:
 	_wave_running = true
 	_spawning = false
 	if not _challenge:
-		$DiveTimer.wait_time = maxf(1.0, 3.4 - wave * 0.16)
+		$DiveTimer.wait_time = maxf(1.0, 3.4 - wave * 0.16) * Global.dive_interval_scale()
 		$DiveTimer.start()
 
 
@@ -130,13 +130,26 @@ func _finish_wave() -> void:
 	Global.award_bonus("WAVE CLEAR", 100 * wave)
 	if not Global.damaged_this_wave:
 		Global.award_bonus("NO DAMAGE", 250)
+	_award_accuracy()
 	_cooldown = 1.6
+
+
+# Rewards aim rather than volume of fire: spraying to clear the wave scores
+# nothing here, and the bonus scales with how much of it was wasted.
+func _award_accuracy() -> void:
+	if Global.shots_fired < 12:
+		return
+	var pct := roundi(Global.accuracy() * 100.0)
+	if pct >= 60:
+		Global.award_bonus("ACCURACY %d%%" % pct, (pct - 50) * 40)
+	Global.shots_fired = 0
+	Global.shots_hit = 0
 
 
 func _spawn_formation(wave: int) -> void:
 	_build_layout(wave)
 	var types := _pick_types(wave)
-	var scale := 1.0 + (wave - 1) * 0.045
+	var scale := (1.0 + (wave - 1) * 0.045) * Global.enemy_speed_scale()
 	_alive.clear()
 
 	for i in _slots.size():
@@ -630,4 +643,6 @@ func _active() -> bool:
 
 
 func _sleep(seconds: float) -> void:
-	await get_tree().create_timer(seconds).timeout
+	# process_always defaults to true, which would keep the wave script running
+	# - and enemies spawning - behind the pause menu.
+	await get_tree().create_timer(seconds, false).timeout

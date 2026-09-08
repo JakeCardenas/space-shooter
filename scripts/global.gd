@@ -42,6 +42,9 @@ var high_score := 0
 var chosen_ship := 1
 var mute := false
 var fullscreen := false
+var shake_enabled := true
+var auto_fire := false
+var difficulty := 1                 ## 0 easy, 1 normal, 2 hard
 var volumes := {"Master": 1.0, "Music": 1.0, "SFX": 1.0}
 # Set before reloading the scene to drop straight back into a run.
 var restart_ship := 0
@@ -54,6 +57,8 @@ var captured := false
 var challenge_active := false
 var challenge_hits := 0
 var challenge_total := 0
+var shots_fired := 0
+var shots_hit := 0
 
 var leaderboard: Array = []
 var last_leaderboard_rank := -1
@@ -82,6 +87,8 @@ func reset_values() -> void:
 	challenge_active = false
 	challenge_hits = 0
 	challenge_total = 0
+	shots_fired = 0
+	shots_hit = 0
 	_combo_timer = 0.0
 	Engine.time_scale = 1.0
 	_previous_high = high_score
@@ -208,14 +215,57 @@ func _exit_tree() -> void:
 
 
 func shake(strength: float) -> void:
-	shake_requested.emit(strength)
+	if shake_enabled:
+		shake_requested.emit(strength)
+
+
+# --- difficulty -------------------------------------------------------------
+
+const DIFFICULTY_NAMES := ["EASY", "NORMAL", "HARD"]
+const DIFFICULTY_LIVES := [4, 3, 2]
+const DIFFICULTY_SPEED := [0.85, 1.0, 1.18]
+const DIFFICULTY_DIVES := [1.35, 1.0, 0.78]   ## seconds between dives, scaled
+
+
+func difficulty_name() -> String:
+	return DIFFICULTY_NAMES[difficulty]
+
+
+func starting_lives() -> int:
+	return DIFFICULTY_LIVES[difficulty]
+
+
+func enemy_speed_scale() -> float:
+	return DIFFICULTY_SPEED[difficulty]
+
+
+func dive_interval_scale() -> float:
+	return DIFFICULTY_DIVES[difficulty]
+
+
+# --- accuracy ---------------------------------------------------------------
+
+# Counted per bolt, so a spread shot that lands two of three reads as two hits
+# out of three fired. Pierce shots count every enemy they pass through.
+func register_shot() -> void:
+	shots_fired += 1
+
+
+func register_hit() -> void:
+	shots_hit += 1
+
+
+func accuracy() -> float:
+	if shots_fired <= 0:
+		return 0.0
+	return clampf(float(shots_hit) / float(shots_fired), 0.0, 1.0)
 
 
 # Slows the whole game (bullets, enemies, everything) for `duration` real
 # seconds, using a real-time timer so it self-corrects regardless of overlap.
 func start_slowmo(duration: float, factor: float = 0.5) -> void:
 	Engine.time_scale = factor
-	var timer := get_tree().create_timer(duration, true, false, true)
+	var timer := get_tree().create_timer(duration, false, false, true)
 	timer.timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
 
@@ -272,6 +322,9 @@ func save_settings() -> void:
 			"mute": mute,
 			"fullscreen": fullscreen,
 			"ship": chosen_ship,
+			"shake": shake_enabled,
+			"auto_fire": auto_fire,
+			"difficulty": difficulty,
 		})
 
 
@@ -288,6 +341,9 @@ func load_settings() -> void:
 				mute = bool(data.get("mute", false))
 				fullscreen = bool(data.get("fullscreen", false))
 				chosen_ship = clampi(int(data.get("ship", 1)), 1, 3)
+				shake_enabled = bool(data.get("shake", true))
+				auto_fire = bool(data.get("auto_fire", false))
+				difficulty = clampi(int(data.get("difficulty", 1)), 0, 2)
 	apply_settings()
 
 

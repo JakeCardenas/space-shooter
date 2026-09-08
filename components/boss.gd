@@ -57,7 +57,12 @@ func _ready() -> void:
 	phase_changed.emit(0)
 
 
-func _process(delta: float) -> void:
+# Movement runs on the physics tick, not the render frame. _process delta
+# varies with the frame rate, so a stall - a backgrounded tab, a GC pause -
+# would step this far enough to skip clean through a hitbox between two
+# collision checks. The physics step is a fixed 1/60s no matter what the
+# renderer is doing.
+func _physics_process(delta: float) -> void:
 	if destroyed or not Global.game_on or Global.game_over:
 		return
 
@@ -200,7 +205,7 @@ func explode(award_score: bool) -> void:
 		get_parent().add_child(boom)
 		boom.global_position = global_position + Vector2(randf_range(-70.0, 70.0), randf_range(-36.0, 36.0))
 		$Sprite2D.modulate = Color(1, 1, 1, 1.0 - float(i) / 7.0)
-		await get_tree().create_timer(0.09).timeout
+		await get_tree().create_timer(0.09, false).timeout
 
 	if is_inside_tree():
 		var drop = _powerup.instantiate()

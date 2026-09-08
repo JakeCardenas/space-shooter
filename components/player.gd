@@ -37,6 +37,7 @@ var _fire_button: Control = null
 
 
 func _ready() -> void:
+	max_health = Global.starting_lives()
 	health = max_health
 	_last_x = global_position.x
 	visible = false
@@ -64,7 +65,12 @@ func _find_virtual_controls() -> void:
 	_fire_button = get_tree().get_first_node_in_group("fire_button")
 
 
-func _process(delta: float) -> void:
+# Movement runs on the physics tick, not the render frame. _process delta
+# varies with the frame rate, so a stall - a backgrounded tab, a GC pause -
+# would step this far enough to skip clean through a hitbox between two
+# collision checks. The physics step is a fixed 1/60s no matter what the
+# renderer is doing.
+func _physics_process(delta: float) -> void:
 	visible = Global.game_on
 	if not Global.game_on or Global.game_over or destroyed:
 		return
@@ -73,6 +79,8 @@ func _process(delta: float) -> void:
 
 	var shooting := Input.is_action_pressed("left_click") or Input.is_action_pressed("shoot")
 	if is_instance_valid(_fire_button) and _fire_button.is_pressed():
+		shooting = true
+	if Global.auto_fire:
 		shooting = true
 	
 	if shooting and can_shoot:
@@ -174,6 +182,7 @@ func _spawn_main_laser(scene: PackedScene, direction: Vector2) -> void:
 
 
 func _emit_laser(scene: PackedScene, direction: Vector2, at: Vector2) -> void:
+	Global.register_shot()
 	var new_laser = scene.instantiate()
 	new_laser.direction = direction
 	new_laser.global_position = at

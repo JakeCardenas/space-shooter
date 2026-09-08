@@ -14,7 +14,9 @@
 
 ### Menus
 - **↑/↓** — move the cursor.
-- **ENTER** — confirm.
+- **ENTER** — confirm. Space is deliberately *not* a menu confirm: it is the
+  fire key, and a reflexive tap while paused would otherwise pick whatever the
+  cursor was sitting on.
 - **←/→** — adjust a value (volume meters in Settings) or change ship in Ship
   Select.
 - **ESC** — back out one screen, and resume from the pause menu.
@@ -43,5 +45,15 @@ So switching between them mid-run never needs a mode toggle.
 
 ## Settings
 
-Master, music and SFX volumes each drive their own audio bus and are saved to
-`user://settings.save` along with the fullscreen toggle and the chosen ship.
+Saved to `user://settings.save`:
+
+- **MASTER / MUSIC / SFX** — each drives its own audio bus.
+- **SCREEN** — windowed or fullscreen. Never restored on the web build, where
+  browsers only grant fullscreen from a user gesture.
+- **SCREEN SHAKE** — off disables it entirely, for motion sensitivity.
+- **AUTO FIRE** — holds the trigger for you. Worth turning on for touch, where
+  rapid tapping is harder than mashing a spacebar.
+- **DIFFICULTY** — Easy / Normal / Hard, changing lives, enemy speed and how
+  often enemies break formation to dive.
+
+The chosen ship is saved here too.

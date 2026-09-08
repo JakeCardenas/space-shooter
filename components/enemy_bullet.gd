@@ -10,7 +10,12 @@ func _ready() -> void:
 	rotation = direction.angle() - PI / 2.0
 
 
-func _process(delta: float) -> void:
+# Movement runs on the physics tick, not the render frame. _process delta
+# varies with the frame rate, so a stall - a backgrounded tab, a GC pause -
+# would step this far enough to skip clean through a hitbox between two
+# collision checks. The physics step is a fixed 1/60s no matter what the
+# renderer is doing.
+func _physics_process(delta: float) -> void:
 	if Global.game_over:
 		return
 	position += direction * speed * delta

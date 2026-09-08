@@ -50,6 +50,9 @@ const SETTING_BUSES := ["Master", "Music", "SFX"]
 	$CanvasLayer/settingsScreen/LabelMusic,
 	$CanvasLayer/settingsScreen/LabelSfx,
 	$CanvasLayer/settingsScreen/LabelScreen,
+	$CanvasLayer/settingsScreen/LabelShake,
+	$CanvasLayer/settingsScreen/LabelAutoFire,
+	$CanvasLayer/settingsScreen/LabelDifficulty,
 	$CanvasLayer/settingsScreen/ButtonBack,
 ]
 @onready var _settings_values: Array[Label] = [
@@ -57,6 +60,9 @@ const SETTING_BUSES := ["Master", "Music", "SFX"]
 	$CanvasLayer/settingsScreen/ValueMusic,
 	$CanvasLayer/settingsScreen/ValueSfx,
 	$CanvasLayer/settingsScreen/ValueScreen,
+	$CanvasLayer/settingsScreen/ValueShake,
+	$CanvasLayer/settingsScreen/ValueAutoFire,
+	$CanvasLayer/settingsScreen/ValueDifficulty,
 ]
 @onready var _wave_label: Label = $CanvasLayer/inGameScreen/LabelWave
 @onready var _bonus_label: Label = $CanvasLayer/inGameScreen/LabelBonus
@@ -66,6 +72,7 @@ const SETTING_BUSES := ["Master", "Music", "SFX"]
 	$CanvasLayer/inGameScreen/lives/life1,
 	$CanvasLayer/inGameScreen/lives/life2,
 	$CanvasLayer/inGameScreen/lives/life3,
+	$CanvasLayer/inGameScreen/lives/life4,
 ]
 
 var _virtual_joystick: Control = null
@@ -201,7 +208,10 @@ func _process(delta: float) -> void:
 	$CanvasLayer/inGameScreen/LabelStage.text = "STAGE %d" % maxi(Global.wave, 1)
 	_blink += delta
 	$CanvasLayer/inGameScreen/Label1Up.modulate.a = 1.0 if fposmod(_blink, 1.0) < 0.6 else 0.0
+	# Only as many icons as the difficulty actually grants, so a dim slot always
+	# means a life you can still lose - never one you could never have had.
 	for i in _lives.size():
+		_lives[i].visible = i < _player.max_health
 		_lives[i].modulate.a = 1.0 if i < _player.health else 0.15
 
 	if Global.game_over and not _game_over_shown:
@@ -334,13 +344,24 @@ func _move_settings(step: int) -> void:
 
 
 func _adjust_setting(step: int) -> void:
-	if _settings_index < SETTING_BUSES.size():
-		var bus: String = SETTING_BUSES[_settings_index]
-		Global.set_volume(bus, snappedf(Global.volumes[bus] + step * 0.1, 0.1))
-		Sfx.play("click", -10.0)
-	elif _settings_index == SETTING_BUSES.size():
-		Global.set_fullscreen(not Global.fullscreen)
-		Sfx.play("click", -10.0)
+	match _settings_index:
+		0, 1, 2:
+			var bus: String = SETTING_BUSES[_settings_index]
+			Global.set_volume(bus, snappedf(Global.volumes[bus] + step * 0.1, 0.1))
+		3:
+			Global.set_fullscreen(not Global.fullscreen)
+		4:
+			Global.shake_enabled = not Global.shake_enabled
+			Global.save_settings()
+		5:
+			Global.auto_fire = not Global.auto_fire
+			Global.save_settings()
+		6:
+			Global.difficulty = wrapi(Global.difficulty + step, 0, 3)
+			Global.save_settings()
+		_:
+			return
+	Sfx.play("click", -10.0)
 	_refresh_settings()
 
 
@@ -349,8 +370,10 @@ func _refresh_settings() -> void:
 	_highlight(_settings_rows, _settings_index)
 	for i in SETTING_BUSES.size():
 		_settings_values[i].text = _volume_bar(Global.volumes[SETTING_BUSES[i]])
-	_settings_values[SETTING_BUSES.size()].text = \
-		"FULLSCREEN" if Global.fullscreen else "WINDOW"
+	_settings_values[3].text = "FULLSCREEN" if Global.fullscreen else "WINDOW"
+	_settings_values[4].text = "ON" if Global.shake_enabled else "OFF"
+	_settings_values[5].text = "ON" if Global.auto_fire else "OFF"
+	_settings_values[6].text = Global.difficulty_name()
 	_highlight(_settings_values, _settings_index)
 
 
@@ -523,7 +546,7 @@ func _on_high_score_beaten() -> void:
 # --- screens ---------------------------------------------------------------
 
 func _show_game_over() -> void:
-	await get_tree().create_timer(0.9).timeout
+	await get_tree().create_timer(0.9, false).timeout
 	if not is_inside_tree():
 		return
 	_in_game_screen.visible = false

@@ -121,6 +121,51 @@ Three ships to pick from:
 | TANK | Triple spread shot | 0.50s |
 | ZAP  | Piercing plasma orb (3 damage, passes through) | 0.80s |
 
+## Frame-rate, pause and input correctness
+
+Three things here are deliberate and easy to undo by accident:
+
+- **Everything that moves runs in `_physics_process`, not `_process`.** The
+  render delta varies with the frame rate, so a stall — a backgrounded tab, a
+  GC pause — would step a 1050px/s shot far enough to skip clean through a
+  hitbox between two collision checks. The physics step is a fixed 1/60s and
+  Godot runs up to eight of them per rendered frame to catch up, so a slow frame
+  slows the game down instead of teleporting things through each other.
+- **Every `get_tree().create_timer()` passes `process_always = false`.** That
+  argument defaults to **true**, which keeps the timer counting while the tree
+  is paused — the wave script would keep running and spawning enemies behind the
+  pause menu.
+- **`ui_accept` is redefined in `project.godot` to Enter and keypad Enter only.**
+  Godot's default includes Space, which is the fire key: a reflexive tap while
+  paused would activate whatever the cursor sat on, including QUIT TO TITLE.
+
+The touch controls clear their state from `_input` and on focus loss, not just
+from `_gui_input`. A finger that slides off the fire button releases somewhere
+else entirely, so the touch-up never reaches the button and the ship would fire
+forever.
+
+## Difficulty, accuracy and settings
+
+Settings persist to `user://settings.save` and cover master/music/SFX volume,
+windowed/fullscreen, screen shake, auto-fire and difficulty.
+
+| | Easy | Normal | Hard |
+|---|---|---|---|
+| Lives | 4 | 3 | 2 |
+| Enemy speed | 0.85x | 1.0x | 1.18x |
+| Time between dives | 1.35x | 1.0x | 0.78x |
+
+The HUD shows exactly as many life icons as the difficulty grants, so a dim slot
+always means a life you can still lose.
+
+**Accuracy** is counted per bolt — a spread shot that lands two of three reads
+as two hits out of three, and a pierce shot counts every enemy it passes
+through. Clear a wave at 60% or better and it pays a bonus that scales with how
+little you wasted. Spraying to clear the wave scores nothing here.
+
+**Screen shake** can be turned off entirely; `Global.shake()` drops the signal
+at the source rather than every caller having to check.
+
 ## The column grid
 
 Galaga's playfield is one grid, and everything lives on it. `Global` owns it:

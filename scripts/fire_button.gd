@@ -13,6 +13,24 @@ func _ready() -> void:
 	_update_visual()
 
 
+# The touch-up only reaches _gui_input if the finger is still over the button.
+# Slide off it and release, and the ship would fire forever.
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch and not event.pressed \
+			and event.index == _touch_index:
+		_release()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_release()
+
+
+func _release() -> void:
+	_touch_index = -1
+	_set_pressed(false)
+
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -21,8 +39,7 @@ func _gui_input(event: InputEvent) -> void:
 				_set_pressed(true)
 		else:
 			if event.index == _touch_index:
-				_touch_index = -1
-				_set_pressed(false)
+				_release()
 	
 	elif event is InputEventScreenDrag:
 		if event.index == _touch_index:
