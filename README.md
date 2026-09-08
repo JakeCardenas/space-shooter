@@ -30,18 +30,25 @@ If `godot` is already on your PATH, just `./export_web.sh`. The script wipes
 You can also do it from the editor: *Project -> Export -> Web -> Export
 Project*, saving to `web/index.html`.
 
-The export produces `index.html`, `index.js`, `index.wasm`, `index.pck`, the
-audio worklets and the icons. **All of them must be committed** — Vercel serves
-them as-is.
+The export produces `index.html`, the engine files, and the icons. **All of them
+must be committed** — Vercel serves them as-is.
 
-### Caching
+### Cache busting
 
-Godot exports the same filenames on every build, so **nothing may be served with
-a long or `immutable` Cache-Control**. `vercel.json` sends `no-cache` for
-`.wasm`, `.pck` and `.js`, which makes the browser revalidate and get a cheap
-304 when the build has not changed. An `immutable` header here pins returning
-visitors to whichever build they downloaded first — the site keeps serving new
-code and their browser never asks for it.
+Godot names every export `index.js` / `index.wasm` / `index.pck`, so a browser
+that cached one build has no way to tell a later one apart — it will happily
+serve a months-old game from a site that is deploying fresh code every day.
+
+`tools/fingerprint_web.py` runs at the end of `export_web.sh` and renames the
+engine files after a hash of their own contents (`index.<hash>.wasm` and so on),
+then rewrites `executable` in `index.html` to match. The loader resolves all of
+its assets as `${executable}.<suffix>`, so that one field is enough to move the
+whole set. A new build is a new set of URLs, which no cache can shadow.
+
+`index.html` itself keeps the fixed name, so `vercel.json` sends `no-cache` for
+it and for the engine files. Do **not** put a long or `immutable` Cache-Control
+on `index.html` — it is the only file whose name never changes, and it is what
+points at everything else.
 
 ### The loading screen
 

@@ -23,6 +23,12 @@ mkdir -p "$OUT"
 "$GODOT" --headless --path "$HERE" --import
 "$GODOT" --headless --path "$HERE" --export-release "Web" "$OUT/index.html"
 
+# Godot always writes the same index.js / index.wasm / index.pck names, so a
+# returning browser can serve a stale build from cache forever. Rename the
+# engine files after the content they hold and point index.html at the new
+# names: a new build is a new URL, which no cache can shadow.
+python3 "$HERE/tools/fingerprint_web.py" "$OUT"
+
 echo
 echo "Exported to $OUT"
 ls -la "$OUT"
